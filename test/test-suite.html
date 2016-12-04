@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>XSSBuster Testsuite</title>
+        <script>
+            var nativeEval = window.eval;
+            var nativeSetTimeout = window.setTimeout;
+            var nativeSetInterval = window.setInterval;
+            var evilVar = 0;
+            (function() {
+                var payload = encodeURIComponent('javascript:evilVar=1//<svg/onload=alert(1)>');
+                location.search || location.replace('?xss=' + payload);
+                window.name = document.title = payload;
+                location.hash = decodeURIComponent(payload);
+            })();
+        </script>
+        <script src="../src/XSSBuster.js"></script>
+        <link rel="stylesheet" href="QUnit/qunit-git.css">
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <div id="qunit"></div>
+        <div id="qunit-fixture"></div>
+        <script src="QUnit/qunit-git.js"></script>
+
+        <iframe src="iframe.html" class="frames"></iframe>
+
+        <div>
+            <script src="tests.js"></script>
+        </div>
+    </body>
+</html>

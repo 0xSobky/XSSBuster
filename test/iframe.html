@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script>
+            var payload = encodeURIComponent('javascript:evilVar=1//<svg/onload=alert(1)>');
+            document.title = window.name = location.hash = payload;
+            location.search || location.replace('?xss=' + payload);
+            setTimeout(function() {
+                parent.postMessage(payload, '*');
+                window.name = location.hash = payload;
+            }, 1000);
+
+        </script>
+    </head>
+    <body></body>
+</html>
