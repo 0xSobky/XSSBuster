@@ -12,7 +12,7 @@ Examples of this are:
 * [https://hackerone.com/reports/125386#activity-888336](https://hackerone.com/reports/125386#activity-888336)
 
 # The Solution:
-**XSSB** simply utilizes [taint checking](https://en.wikipedia.org/wiki/Taint_checking) to guard against accidental mistakes and poor security practices commonly employed by JS libraries that may lead to DOM-based XSS vulnerabilities.
+**XSSB** mainly utilizes [taint checking](https://en.wikipedia.org/wiki/Taint_checking) to guard against accidental mistakes and poor security practices commonly employed by JS libraries that may lead to DOM-based XSS vulnerabilities.
 
 So, basically, **XSSB** offers you the freedom to deploy any given third-party code into your DOM while at the same time covering your DOM's back!
 
@@ -40,7 +40,7 @@ Based on tests, **XSSB** only takes [10 milliseconds on average](/perf/perf.html
 **XSSB** is compatible with the latest versions of all major web browsers (Firefox, Chrome, IE9+, Edge and Opera) as well as most legacy web browsers through fallback functionality.
 
 # Known Issues:
-* **XSSB** only allows for [Basic Latin](https://en.wikipedia.org/wiki/Basic_Latin_(Unicode_block)) characters within the pathname, search query and hash of the hosting webpage's URL; that also applies to HTML5 messaging and second order data flows (e.g. `localStorage `and `sessionStorage`). If your web application deals with a different set of characters, you may consider [base64](https://en.wikipedia.org/wiki/Base64) encoding as a workaround.
+* **XSSB** only allows for [Basic Latin](https://en.wikipedia.org/wiki/Basic_Latin_(Unicode_block)) characters within the pathname, search query and hash of the hosting webpage's URL; that somewhat also applies to HTML5 messaging.... If your web application deals with a different set of characters, you may consider [base64](https://en.wikipedia.org/wiki/Base64) encoding as a workaround.
 
 # Credits:
 * [@0xSobky](https://twitter.com/0xsobky)
