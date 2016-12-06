@@ -642,12 +642,12 @@
              * @return {boolean}.
              */
             var isTainted = function(taint) {
-                return (taint && arg.indexOf(taint) !== -1);
+                return (isNaN(taint) &&
+                    taint.length > 6 &&
+                    arg.indexOf(taint) !== -1);
             };
             arg = toPlain(arg).output;
-            return (isNaN(arg) &&
-                arg.length > 6 &&
-                some.call(inputs, isTainted));
+            return (some.call(inputs, isTainted));
         };
         if (some.call(arguments, validate)) {
             return false;
