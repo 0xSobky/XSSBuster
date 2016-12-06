@@ -20,9 +20,9 @@ So, basically, **XSSB** offers you the freedom to deploy any given third-party c
 Simply place the script element of _XSSBuster.js_ right before any other third-party scripts you include into your webpage(s), typically at the very top of the head tag:
 ```html
 <head>
-<title>Example</title>
-<script type="text/javascript" src="XSSBuster.js"></script>
-<script type="text/javascript" src="thirdParty-library.js"></script>
+    <title>Example</title>
+    <script type="text/javascript" src="XSSBuster.js"></script>
+    <script type="text/javascript" src="thirdParty-library.js"></script>
 </head>
 ```
 #### Notes:
