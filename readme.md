@@ -37,7 +37,7 @@ A live demo can be found at: [https://xssb.herokuapp.com](https://xssb.herokuapp
 Based on tests, **XSSB** only takes [10 milliseconds on average](/perf/perf.html) to do all required security checks besides the registration of a few necessary event listeners.
 
 # Compatibility:
-**XSSB** is compatible with the latest versions of all major web browsers (Firefox, Chrome, IE9+, Edge and Opera) as well as most legacy web browsers through fallback functionality.
+**XSSB** is compatible with the latest versions of all major web browsers (Firefox, Chrome, IE, Edge, Safari, and Opera) as well as most legacy web browsers through fallback functionality.
 
 # Known Issues:
 * **XSSB** only allows for [Basic Latin](https://en.wikipedia.org/wiki/Basic_Latin_(Unicode_block)) characters within the pathname, search query and hash of the hosting webpage's URL; that somewhat also applies to HTML5 messaging.... If your web application deals with a different set of characters, you may consider [base64](https://en.wikipedia.org/wiki/Base64) encoding as a workaround.
