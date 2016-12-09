@@ -41,6 +41,7 @@ Based on tests, **XSSB** only takes [10 milliseconds on average](/perf/perf.html
 
 # Known Issues:
 * **XSSB** only allows for [Basic Latin](https://en.wikipedia.org/wiki/Basic_Latin_(Unicode_block)) characters within the pathname, search query and hash of the hosting webpage's URL; that somewhat also applies to HTML5 messaging.... If your web application deals with a different set of characters, you may consider [base64](https://en.wikipedia.org/wiki/Base64) encoding as a workaround.
+* **XSSB** overrides security-sensitive functions like `eval` in order to enforce taint checking. A side effect of this is that `eval` will behave more like jQuery's [`global_eval`](https://api.jquery.com/jquery.globaleval/) than the native implementation of `eval` in most web browsers.
 
 # Credits:
 * [@0xSobky](https://twitter.com/0xsobky)
