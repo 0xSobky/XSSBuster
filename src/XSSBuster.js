@@ -1,5 +1,5 @@
 (function(window, Object, Array) {
-    // Version 1.0.0.1
+    // Version 1.0.0.1.
     var inputs, origin, _origin, win, _Function, _eval, _setTimeout,
         _setInterval, _atob, some, _cookieDesc, _localStorage, _appendChild,
         _replaceChild, _insertBefore, elPrototype, isSafeArg, guardMethod,
@@ -8,7 +8,7 @@
         getOwnPropertyDescriptor, genDescriptor, _insertAdjacentHTML,
         _createContextualFragment, Rprototype, getPrototypeOf, _cookie;
 
-    // Assert we have access to the window object
+    // Assert we have access to the window object.
     if (!window) {
         return;
     }
@@ -25,16 +25,16 @@
      */
     var getType = function(input) {
         var toString = Object.prototype.toString;
-        // is it a string?
+        // Is it a string?
         if (typeof input === 'string' ||
             toString.call(input) === '[object String]') {
             return 'string';
-        // an object?
+        // An object?
         } else if (toString.call(input) === '[object Object]') {
             return 'object';
         }
         try {
-            // perhaps an array?
+            // Perhaps an array?
             if (Array.isArray(input)) {
                 return 'array';
             }
@@ -59,7 +59,7 @@
         var duc = window.decodeURIComponent;
         var depth = 0;
         var revMethod = [];
-        /*
+        /**
          * URL-decode a given string.
          *
          * @param input {string}, a URL-encoded string.
@@ -68,11 +68,11 @@
         var deEncode = function(input) {
             var es, ues, eusExtend, _input;
             /**
-             * a try/catch clause to handle any
+             * A try/catch clause to handle any
              * URIError exceptions that might occur.
              */
             try {
-                // recursively URL-decode the input data
+                // Recursively URL-decode the input data.
                 while (duc(input) !== input) {
                     _input = duc(input);
                     if (du(input) === _input) {
@@ -85,15 +85,15 @@
                     ++depth;
                 }
             } catch (e) {
-                // make sure `escape` and `unescape` are still supported
+                // Make sure `escape` and `unescape` are still supported.
                 if (typeof window.escape === 'function' &&
                     typeof window.unescape === 'function') {
                     es = window.escape;
                     ues = window.unescape;
-                // a just-in-case fallback
+                // A just-in-case fallback.
                 } else {
                     /**
-                     * extend a given URI encoding/decoding function's functionality.
+                     * Extend a given URI encoding/decoding function's functionality.
                      *
                      * @param func {function}, a `decodeURIComponent`/`encodeURIComponent` function.
                      * @return {function}.
@@ -126,7 +126,7 @@
     };
 
     /**
-     * Take a `toPlain()` output and re-encode it.
+     * Take a `toPlain` output and re-encode it.
      *
      * @param input {string}, the output data property of toPlain's output object.
      * @param depth {integer}, the depth data property of toPlain's output object.
@@ -154,14 +154,14 @@
      */
     var sanitize = function(input) {
         var _input, propSanitize, index, keys, hasOwnProperty, prop, item;
-        // matches only Basic Latin characters along with a few safe special chars
+        // Matches only Basic Latin characters along with a few safe special chars.
         var wRegex = /[^\w\s\/\-\^+=$#@!&*\|,;:.?%()\[\]{}]/gi;
         var isModified = false;
-        // check if `input` is a string
+        // Check if `input` is a string.
         if (getType(input) === 'string') {
-            // assert it's not a whitespace string
+            // Assert it's not a whitespace string.
             if (/\S/.test(input)) {
-                // check if `input` is URL-encoded
+                // Check if `input` is URL-encoded.
                 if (/%\w{2}/.test(input)) {
                     _input = toPlain(input);
                     input = _input.output;
@@ -177,17 +177,17 @@
                     } while (bRegex.test(input));
                     isModified = true;
                 }
-                // add `input` to the list of tainted strings
+                // Add `input` to the list of tainted strings.
                 inputs.push(input);
-                // re-encode `input` if it has been decoded
+                // Re-encode `input` if it has been decoded.
                 if (_input) {
                     input = reEncode(input, _input.depth, _input.revMethod);
                 }
             }
-            // check if it's an object
+        // Check if it's an object.
         } else if (getType(input) === 'object') {
             /**
-             * take an object property and audit it.
+             * Take an object property and audit it.
              *
              * @param prop {string}, an object property name.
              * @return void.
@@ -212,10 +212,10 @@
                     }
                 }
             }
-        // check if it's an array
+        // Check if it's an array.
         } else if (getType(input) === 'array') {
             index = input.length;
-            // iterate over array items and sanitize them one by one
+            // Iterate over array items and sanitize them one by one.
             while (index--) {
                 item = sanitize(input[index]);
                 if (item !== false) {
@@ -237,7 +237,7 @@
         var pathname, search, _isModified, pIndex, _pIndex, aParam, sParam, hash;
         var isModified = false;
         /**
-         * for sanitizing the pathname property of
+         * For sanitizing the pathname property of
          * the current window location object.
          */
         pathname = sanitize(urlObj.pathname);
@@ -246,7 +246,7 @@
             isModified = true;
         }
         /**
-         * for sanitizing the search property of
+         * For sanitizing the search property of
          * the current window location object.
          */
         search = urlObj.search;
@@ -289,7 +289,7 @@
             }
         }
         /**
-         * for sanitizing the hash property of
+         * For sanitizing the hash property of
          * the current window location object.
          */
         hash = urlObj.hash.slice(1);
@@ -387,7 +387,7 @@
                 _addEventListener.call(target, evName, callback);
             };
         }
-        // for IE8 and earlier versions support
+        // For IE8 and earlier versions support.
         return function(target, equiv, evName, callback) {
             var _callback;
             var _attachEvent = (equiv === 'window') ? window.attachEvent :
@@ -406,7 +406,7 @@
     })();
 
     /**
-     * A proxy function for `Object.defineProperties()`.
+     * A proxy function for `Object.defineProperties`.
      *
      * @param obj {object}, a target object.
      * @param properties {object}, a property descriptor.
@@ -467,7 +467,7 @@
     var auditWin = function(winObj) {
         var name, title, referrer, _onhashchange, _onmessage, auditFrames;
         /**
-         * for registering event listeners to audit
+         * For registering event listeners to audit
          * non-fixed and communicative input sources.
          */
         _onhashchange = function() {
@@ -499,14 +499,14 @@
                 }
             }
         };
-        // for hash re-sanitization whenever it gets modified
+        // For hash re-sanitization whenever it gets modified.
         addListener(winObj, 'window', 'hashchange', _onhashchange);
-        // postMessage() proactive sanitization
+        // For cross-document messaging sanitization.
         addListener(winObj, 'window', 'message', _onmessage);
-        // audit the current window URL
+        // Audit the current window URL.
         auditUrl(winObj.location);
         /**
-         * for sanitizing the name property
+         * For sanitizing the name property
          * of the current window object.
          */
         name = winObj.name;
@@ -517,7 +517,7 @@
             }
         }
         /**
-         * for sanitizing the title of the current document.
+         * For sanitizing the title of the current document.
          * And yep, `document.title` can be -partially?-
          * manipulated by attackers as in search pages!
          */
@@ -525,7 +525,7 @@
         if (title !== false) {
             winObj.document.title = title;
         }
-        // for sanitizing any given document referrer
+        // For sanitizing any given document referrer
         referrer = winObj.document.referrer;
         if (referrer) {
             referrer = auditUrl(parseUrl(referrer));
@@ -538,8 +538,8 @@
                 });
             }
         }
-        /*
-         * for auditing child frames.
+        /**
+         * For auditing child frames.
          *
          * @return void.
          */
@@ -548,8 +548,8 @@
             var getElementsByTagName = document.getElementsByTagName;
             var frames = getElementsByTagName.call(winObj.document,
                 'iframe');
-            /*
-             * for auditing a given frame node.
+            /**
+             * For auditing a given frame node.
              *
              * @param currentFrame {object}, a frame node.
              * @return void.
@@ -579,10 +579,10 @@
             'DOMContentLoaded', auditFrames);
     };
 
-    // Audit `self` window
+    // Audit `self` window.
     auditWin(window);
 
-    // Audit `parent` windows with permissive CORS
+    // Audit `parent` windows with permissive CORS.
     if (window !== top) {
         win = parent;
         try {
@@ -603,7 +603,7 @@
         } while (win !== top);
     }
 
-    /* Monkey-patch JS sinks */
+    /* Monkey-patch JS sinks. */
     _Function = window.Function;
     _eval = window.eval;
     _setInterval = window.setInterval;
@@ -622,21 +622,21 @@
         return false;
     };
 
-    /*
+    /**
      * Check if a given string is safe.
      *
      * @return void.
      */
     isSafeArg = function() {
-        /*
-         * validate any given string argument.
+        /**
+         * Validate any given string argument.
          *
          * @param arg {string}, a given string.
          * @return {boolean}.
          */
         var validate = function(arg) {
-            /*
-             * check if a given string is tainted.
+            /**
+             * Check if a given string is tainted.
              *
              * @param taint {string}, a given string.
              * @return {boolean}.
@@ -655,7 +655,7 @@
         return true;
     };
 
-    /*
+    /**
      * Take a suspicious string and neutralize it.
      *
      * @param str {string}, a suspicious string.
@@ -668,7 +668,7 @@
         return str;
     };
 
-    /*
+    /**
      * Guard `appendChild` and alike methods.
      *
      * @param method {function}, a given function.
@@ -677,8 +677,8 @@
     guardMethod = function(method) {
         return function(node) {
             var nodeName = node.name;
-            /*
-             * check if a given node is unsafe.
+            /**
+             * Check if a given node is unsafe.
              *
              * @param node {object}, a given DOM node.
              * @return {boolean}.
@@ -724,12 +724,12 @@
         };
     };
 
-    /* Guard `appendChild` and alike */
+    /* Guard `appendChild` and alike. */
     elPrototype.appendChild = guardMethod(_appendChild);
     elPrototype.replaceChild = guardMethod(_replaceChild);
     elPrototype.insertBefore = guardMethod(_insertBefore);
 
-    /* Guard `innerHTML` and alike */
+    /* Guard `innerHTML` and alike. */
     Rprototype = Range.prototype;
     getOwnPropertyDescriptor = function () {
         try {
@@ -745,7 +745,7 @@
         }
         return _createContextualFragment.call(this, tagStr);
     };
-    /*
+    /**
      * Generate a safe property descriptor.
      *
      * @param prop {object}, a descriptor object.
@@ -779,10 +779,10 @@
         };
     }
 
-    /* Guard `document.write` and alike methods */
+    /* Guard `document.write` and alike methods. */
     _write = document.write;
     _writeln = document.writeln;
-    /*
+    /**
      * Guard a given function against tainted strings.
      *
      * @param writeFn {function}, a write-like function.
@@ -805,8 +805,8 @@
     document.writeln = guardWrite(_writeln);
 
     Function = function() {
-        /*
-         * construct a new `Function` instance.
+        /**
+         * Construct a new `Function` instance.
          *
          * @return {function}.
          */
@@ -827,7 +827,7 @@
     };
     Function.prototype = Function;
 
-    /*
+    /**
      * Guard a given sink function.
      *
      * @param sinkFn {function}, a sink function.
@@ -862,7 +862,7 @@
         window.setImmediate = guardSink(_setImmediate);
     }
 
-    /* Monkey-patch storage sources */
+    /* Monkey-patch storage sources. */
     getPrototypeOf = function () {
         try {
             return Object.getPrototypeOf.apply(this, arguments);
@@ -899,7 +899,7 @@
             }
         }
     });
-    /*
+    /**
      * Guard a given storage object.
      *
      * @param storageObj {object}, a storage object.
