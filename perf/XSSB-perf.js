@@ -1,7 +1,7 @@
 var start = performance.now(); // for benchmarking
 
 (function(window, Object, Array) {
-    // Version 1.0.0.1.
+    // Version 1.0.0.2.
     var inputs, origin, _origin, win, _Function, _eval, _setTimeout,
         _setInterval, _atob, some, _cookieDesc, _localStorage, _appendChild,
         _replaceChild, _insertBefore, elPrototype, isSafeArg, guardMethod,
@@ -143,7 +143,7 @@ var start = performance.now(); // for benchmarking
     };
 
     /**
-     * Matches evil URI schemes (e.g. `javascript/vbscript:` and `data:`) alongside HTML entities
+     * Matches evil URI schemes (e.g., `javascript/vbscript:` and `data:`) alongside HTML entities
      * in general...not to mention event handlers and scary curly notations!
      */
     var bRegex = /\{\{|\}\}|&#?\w{2,7};?|on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):/gi;
@@ -527,7 +527,7 @@ var start = performance.now(); // for benchmarking
         if (title !== false) {
             winObj.document.title = title;
         }
-        // For sanitizing any given document referrer
+        // For sanitizing any given document referrer.
         referrer = winObj.document.referrer;
         if (referrer) {
             referrer = auditUrl(parseUrl(referrer));
@@ -584,7 +584,7 @@ var start = performance.now(); // for benchmarking
     // Audit `self` window.
     auditWin(window);
 
-    // Audit `parent` windows with permissive CORS.
+    // Audit `parent` window(s).
     if (window !== top) {
         win = parent;
         try {
@@ -664,7 +664,7 @@ var start = performance.now(); // for benchmarking
      * @return {string}, a neutralized string.
      */
     toSafeStr = function(str) {
-        if (bRegex.test(str)) {
+        if (str.indexOf('<') !== 0 && bRegex.test(str)) {
             str = str.replace(bRegex, '');
         }
         return str;
