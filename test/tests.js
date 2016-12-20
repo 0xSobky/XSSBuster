@@ -63,7 +63,7 @@
 
     QUnit.test('Function constructor test', function(assert) {
         var fn = new Function('');
-        assert.ok(fn instanceof Function, 'fn instanceof Function');
+        assert.ok(fn instanceof Function, 'fn is an instance of Function');
     });
 
     QUnit.test('document.cookie test', function(assert) {
@@ -102,13 +102,13 @@
                 }
             });
         };
-        framesTest('frames window.name test', 'iframe window.name sanitized',
+        framesTest('iframes window.name test', 'iframe window.name sanitized',
                        'name');
-        framesTest('frames location.hash test', 'iframe location.hash sanitized',
+        framesTest('iframes location.hash test', 'iframe location.hash sanitized',
                        'location.hash.slice(1)');
-        framesTest('frames document.title test', 'iframe document.title sanitized',
+        framesTest('iframes document.title test', 'iframe document.title sanitized',
                        'document.title');
-        framesTest('frames location.search test',
+        framesTest('iframes location.search test',
                        'iframe location.search sanitized',
                            'location.search.slice(5)', sanPayload);
         nativeSetTimeout(function() {
