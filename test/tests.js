@@ -103,9 +103,9 @@
             });
         };
         framesTest('frames window.name test', 'iframe window.name sanitized',
-                       "name");
+                       'name');
         framesTest('frames location.hash test', 'iframe location.hash sanitized',
-                       "location.hash.slice(1)");
+                       'location.hash.slice(1)');
         framesTest('frames document.title test', 'iframe document.title sanitized',
                        'document.title');
         framesTest('frames location.search test',
