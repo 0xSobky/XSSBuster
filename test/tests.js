@@ -54,9 +54,9 @@
         QUnit.test('window.onmessage test', function(assert) {
             var _origin = ev.origin || ev.originalEvent.origin;
             if (_origin !== window.location.origin) {
-                assert.equal(ev.data, sanPayload, 'Same origin; message not-sanitized');
+                assert.equal(ev.data, sanPayload, 'message sanitized');
             } else {
-                assert.notEqual(ev.data, sanPayload, 'message sanitized');
+                assert.notEqual(ev.data, sanPayload, 'message not sanitized (same origin)');
             }
         });
     });
