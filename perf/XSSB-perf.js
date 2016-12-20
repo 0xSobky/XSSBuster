@@ -1,7 +1,7 @@
 var start = performance.now(); // for benchmarking
 
 (function(window, Object, Array) {
-    // Version 1.0.0.2.
+    // Version 1.0.1.
     var inputs, origin, _origin, win, _Function, _eval, _setTimeout,
         _setInterval, _atob, some, _cookieDesc, _localStorage, _appendChild,
         _replaceChild, _insertBefore, elPrototype, isSafeArg, guardMethod,
