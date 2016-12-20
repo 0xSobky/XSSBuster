@@ -99,7 +99,7 @@
                      * @return {function}.
                      */
                     eusExtend = function(func) {
-                        var charset = /[\w\s\/\-\^+=_$#@!&*\|,.?:<>\[\]()'";{}]|[^\x00-\x7F]|%(?:40|2[B-F]|2[0-9]|3[A-E]|[57][B-D])/gi;
+                        var charset = /(?:[\x00-\x24]|[\x26-\x7f]|[^\x00-\x7f]|%(?:40|2[b-f]|2[0-9]|3[a-e]|[57][b-d]))+/gi;
                         return function(string) {
                             string = string.match(charset);
                             return (string) ? func(string.join('')) : null;
@@ -155,7 +155,7 @@
     var sanitize = function(input) {
         var _input, propSanitize, index, keys, hasOwnProperty, prop, item;
         // Matches only Basic Latin characters along with a few safe special chars.
-        var wRegex = /[^\w\s\/\-\^+=$#@!&*\|,;:.?%()\[\]{}]/gi;
+        var wRegex = /[^\w\s\/^+=$#@!&*|,;:.?%()[\]{}-]/g;
         var isModified = false;
         // Check if `input` is a string.
         if (getType(input) === 'string') {
