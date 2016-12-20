@@ -678,7 +678,7 @@ var start = performance.now(); // for benchmarking
      */
     guardMethod = function(method) {
         return function(node) {
-            var nodeName = node.name;
+            var nodeName = node.nodeName;
             /**
              * Check if a given node is unsafe.
              *
