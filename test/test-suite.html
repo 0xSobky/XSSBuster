@@ -4,10 +4,11 @@
         <meta charset="utf-8">
         <title>XSSBuster Testsuite</title>
         <script>
+            var evilVar = 0;
+            var goodVar = 0;
             var nativeEval = window.eval;
             var nativeSetTimeout = window.setTimeout;
             var nativeSetInterval = window.setInterval;
-            var evilVar = 0;
             (function() {
                 var payload = encodeURIComponent('javascript:evilVar=1//<svg/onload=alert(1)>');
                 location.search || location.replace('?xss=' + payload);
@@ -26,7 +27,7 @@
 
         <iframe src="iframe.html" class="frames"></iframe>
 
-        <div>
+        <div id="test">
             <script src="tests.js"></script>
         </div>
     </body>

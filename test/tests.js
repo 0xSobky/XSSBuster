@@ -1,21 +1,35 @@
 (function() {
     var rawSanPayload = 'evilVar=1//svg/alert(1)';
     var sanPayload = encodeURIComponent('evilVar=1//svg/alert(1)');
+    var hash = location.hash.slice(1);
+    var testDiv = document.getElementById('test');
+
     /*
      * Registers a new cross-browser event listener.
      *
-     * @param {object}, a target object to bind the event listener to.
      * @param evName {string}, the name of the event to register.
      * @param callback {function}, a callback function for the event listener.
-     * @return {function}.
+     * @return void.
      */
     var addListener = (function() {
-        return (addEventListener) ? addEventListener :
+        return (window.addEventListener) ? window.addEventListener :
             // for IE8 and earlier versions support
             function (evName, callback) {
-                attachEvent.call(this, 'on' + evName, callback);
+                this.attachEvent('on' + evName, callback);
             };
     })();
+
+    /*
+     * Create a script element.
+     *
+     * @return {object}, a script node.
+     */
+    var createScriptEl = function () {
+        var scriptEl = document.createElement('script');
+        scriptEl.text = hash;
+        return scriptEl;
+    };
+
     /*
      * Tests any given sink function.
      *
@@ -24,11 +38,11 @@
      * @return void.
      */
     var sinkTest = function(fn, name) {
-        fn(location.hash.slice(1));
-        fn('var goodVar = 1;');
         QUnit.test(name + ' test', function(assert) {
+            fn(hash);
+            fn('var goodVar = 1;');
             assert.ok(evilVar === 0, name + ' sanitized');
-            assert.ok(goodVar === 1, name + ' functional');
+            assert.ok(evilVar === 0, name + ' functional');
         });
     };
 
@@ -50,6 +64,70 @@
                          sanPayload, 'location.search sanitized');
     });
 
+    QUnit.test('Function constructor test', function(assert) {
+        var fn = new Function('');
+        assert.ok(fn instanceof Function, 'fn is an instance of Function');
+    });
+
+    QUnit.test('document.cookie test', function(assert) {
+        document.cookie = rawSanPayload;
+        assert.notEqual(document.cookie, rawSanPayload, 'cookie sanitized');
+    });
+
+    QUnit.test('appendChild test', function(assert) {
+        var scriptEl = createScriptEl();
+        document.body.appendChild(scriptEl);
+        assert.ok(evilVar === 0, 'appendChild sanitized');
+    });
+
+    QUnit.test('insertAdjacentElement test', function(assert) {
+        var scriptEl = createScriptEl();
+        testDiv.insertAdjacentElement('afterend', scriptEl);
+        assert.ok(evilVar === 0, 'insertAdjacentElement sanitized');
+    });
+    
+    QUnit.test('replaceChild test', function(assert) {
+        var scriptEl = createScriptEl();
+        document.body.replaceChild(scriptEl, testDiv);
+        assert.ok(evilVar === 0, 'replaceChild sanitized');
+    });
+
+    QUnit.test('insertBefore test', function(assert) {
+        var scriptEl = createScriptEl();
+        document.body.insertBefore(scriptEl, document.body.childNodes[0]);
+        assert.ok(evilVar === 0, 'insertBefore sanitized');
+    });
+
+    QUnit.test('localStorage test', function(assert) {
+        window.localStorage.setItem('test', rawSanPayload);
+        assert.notEqual(localStorage.getItem('test'), rawSanPayload,
+                            'localStorage sanitized');
+    });
+
+    QUnit.test('sessionStorage test', function(assert) {
+        window.sessionStorage.setItem('test', rawSanPayload);
+        assert.notEqual(sessionStorage.getItem('test'), rawSanPayload,
+                            'sessionStorage sanitized');
+    });
+
+    QUnit.test('createContextualFragment test', function(assert) {
+        var evilTagString = '<script>' + hash + '</script>';
+        var goodTagString = '<script> var goodVar = 1; </script>';
+        var createDocumentFragement = function (tagString) {
+            var range = document.createRange();
+            var documentFragment = range.createContextualFragment(tagString);
+            document.body.appendChild(documentFragment);
+        };
+        createDocumentFragement(evilTagString);
+        createDocumentFragement(goodTagString);
+        assert.ok(evilVar === 0, 'createContextualFragment sanitized');
+        assert.ok(goodVar === 1, 'createContextualFragment sanitized');
+    });
+
+    sinkTest(eval, 'eval');
+    sinkTest(setTimeout, 'setTimeout');
+    sinkTest(setInterval, 'setInterval');
+
     addListener.call(window, 'message', function(ev) {
         QUnit.test('window.onmessage test', function(assert) {
             var _origin = ev.origin || ev.originalEvent.origin;
@@ -61,65 +139,41 @@
         });
     });
 
-    QUnit.test('Function constructor test', function(assert) {
-        var fn = new Function('');
-        assert.ok(fn instanceof Function, 'fn is an instance of Function');
+    addListener.call(window, 'load', function() {
+        var frames = document.getElementsByTagName('iframe');
+        var fIndex = frames.length;
+        while (fIndex--) {
+            (function (currentFrame) {
+                var frameTest = function () {
+                    QUnit.test('iframe window.name test', function(assert) {
+                            assert.equal(currentFrame.name,
+                                             sanPayload, 'iframe window.name sanitized');
+                    });
+                    QUnit.test('iframe location.hash test', function(assert) {
+                            assert.equal(currentFrame.location.hash.slice(1),
+                                             sanPayload, 'iframe location.hash sanitized');
+                    });
+                    QUnit.test('iframe document.title test', function(assert) {
+                            assert.equal(currentFrame.document.title,
+                                             sanPayload, 'iframe document.title sanitized');
+                    });
+                    QUnit.test('iframe location.search test', function(assert) {
+                            assert.equal(currentFrame.location.search.slice(5),
+                                             sanPayload, 'iframe location.search sanitized');
+                    });
+                    nativeSetTimeout(function() {
+                        QUnit.test('deferred frame window.name test', function(assert) {
+                                assert.equal(currentFrame.name,
+                                                 sanPayload, 'iframe window.name sanitized (deferred)');
+                        });
+                        QUnit.test('deferred frame location.hash test', function(assert) {
+                                assert.equal(currentFrame.location.hash.slice(1),
+                                                 sanPayload, 'iframe location.hash sanitized (deferred)');
+                        });
+                    }, 2000);
+                };
+                nativeSetTimeout(frameTest, 2000);
+            }(frames[fIndex].contentWindow));
+        }
     });
-
-    QUnit.test('document.cookie test', function(assert) {
-        document.cookie = rawSanPayload;
-        assert.notEqual(document.cookie, rawSanPayload, 'cookie sanitized');
-    });
-
-    QUnit.test('localStorage test', function(assert) {
-        localStorage.setItem('test', rawSanPayload);
-        assert.notEqual(localStorage.getItem('test'), rawSanPayload,
-                            'localStorage sanitized');
-    });
-
-    QUnit.test('sessionStorage test', function(assert) {
-        sessionStorage.setItem('test', rawSanPayload);
-        assert.notEqual(sessionStorage.getItem('test'), rawSanPayload,
-                            'sessionStorage sanitized');
-    });
-
-    nativeSetTimeout(function() {
-        /*
-         * Initiates a new test for all child frames.
-         *
-         * @param testName {string}, an expressive per-test title.
-         * @param testMessage {string}, a test-success message.
-         * @param prop {string}, the property name to check.
-         * @return void.
-         */
-        var framesTest = function(testName, testMessage, prop) {
-            QUnit.test(testName, function(assert) {
-                var frames = document.getElementsByTagName('iframe');
-                var fIndex = frames.length;
-                while (fIndex--) {
-                    assert.equal(nativeEval('window.frames['+fIndex+'].'+prop),
-                                     sanPayload, testMessage)
-                }
-            });
-        };
-        framesTest('iframes window.name test', 'iframe window.name sanitized',
-                       'name');
-        framesTest('iframes location.hash test', 'iframe location.hash sanitized',
-                       'location.hash.slice(1)');
-        framesTest('iframes document.title test', 'iframe document.title sanitized',
-                       'document.title');
-        framesTest('iframes location.search test',
-                       'iframe location.search sanitized',
-                           'location.search.slice(5)', sanPayload);
-        nativeSetTimeout(function() {
-            framesTest('deferred frames location.hash test',
-                       'iframe location.hash sanitized', 'location.hash.slice(1)');
-            framesTest('deferred frames window.name test',
-                           'iframe window.name sanitized', 'name');
-        }, 2000);
-    }, 2000);
-
-    sinkTest(eval, 'eval');
-    sinkTest(setTimeout, 'setTimeout');
-    sinkTest(setInterval, 'setInterval');
 })();
