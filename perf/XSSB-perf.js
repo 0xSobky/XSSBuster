@@ -1,7 +1,7 @@
 var start = performance.now(); // for benchmarking
 
 (function(window, Object, Array) {
-    // Version 1.0.2.
+    // Version 1.0.3.
     var Rprototype, _Function, _appendChild, _atob, _cookie, _cookieDesc,
         _createContextualFragment, _eval, _execScript, _innerHTML,
         _insertAdjacentElement, _insertAdjacentHTML, _insertBefore,
