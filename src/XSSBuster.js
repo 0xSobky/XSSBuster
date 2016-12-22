@@ -1,20 +1,21 @@
 (function(window, Object, Array) {
     // Version 1.0.2.
-    var Rprototype, _Function, _appendChild, _atob, _cookie, _cookieDesc,
-        _createContextualFragment, _eval, _execScript, _innerHTML,
-        _insertAdjacentElement, _insertAdjacentHTML, _insertBefore,
-        _localStorage, _origin, _outerHTML, _replaceChild, _sessionStorage,
-        _setImmediate, _setInterval, _setTimeout, _write, _writeln,
-        elPrototype, win;
+    var inputs, origin, _origin, win, _Function, _eval, _setTimeout,
+        _setInterval, _atob, some, _cookieDesc, _localStorage, _appendChild,
+        _replaceChild, _insertBefore, elPrototype, isSafeArg, guardMethod,
+        _execScript, _setImmediate, _sessionStorage, guardSink, guardStorage,
+        guardWrite, toSafeStr, _write, _writeln, _innerHTML, _outerHTML,
+        getOwnPropertyDescriptor, genDescriptor, _insertAdjacentHTML,
+        _createContextualFragment, Rprototype, getPrototypeOf, _cookie;
 
-    var inputs = [];
-    var origin = window.location.origin ||
+    // Assert we have access to the window object.
+    if (!window) {
+        return;
+    }
+
+    inputs = [];
+    origin = window.location.origin ||
         window.location.protocol + '//' + window.location.host;
-    /**
-     * Matches evil URI schemes (e.g., `javascript/vbscript:` and `data:`) alongside HTML entities
-     * in general...not to mention event handlers and scary curly notations!
-     */
-    var bRegex = /\{\{|\}\}|&#?\w{2,7};?|on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):/gi;
 
     /**
      * Take an input and return its data type.
@@ -65,7 +66,7 @@
          * @return {string}, a URL-decoded string.
          */
         var deEncode = function(input) {
-            var _input, es, eusExtend, ues;
+            var es, ues, eusExtend, _input;
             /**
              * A try/catch clause to handle any
              * URIError exceptions that might occur.
@@ -140,13 +141,19 @@
     };
 
     /**
+     * Matches evil URI schemes (e.g., `javascript/vbscript:` and `data:`) alongside HTML entities
+     * in general...not to mention event handlers and scary curly notations!
+     */
+    var bRegex = /\{\{|\}\}|&#?\w{2,7};?|on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):/gi;
+
+    /**
      * Take a raw input and sanitize it as needed.
      *
      * @param input {string|array|object}, a string literal, array or object.
      * @return {string|array|object|boolean}, sanitized data or `false`.
      */
     var sanitize = function(input) {
-        var _input, hasOwnProperty, index, item, keys, prop, propSanitize;
+        var _input, propSanitize, index, keys, hasOwnProperty, prop, item;
         // Matches only Basic Latin characters along with a few safe special chars.
         var wRegex = /[^\w\s\/^+=$#@!&*|,;:.?%()[\]{}-]/g;
         var isModified = false;
@@ -221,31 +228,13 @@
     };
 
     /**
-     * Parse a URL string.
-     *
-     * @param url {string}, a URL string.
-     * @return {object}, a URL object.
-     */
-    var parseUrl = function(url) {
-        var parser;
-        try {
-            url = new URL(url);
-        } catch (e) {
-            parser = document.createElement('a');
-            parser.href = url;
-            url = parser;
-        }
-        return url;
-    };
-
-    /**
      * Take a URL object and sanitize it.
      *
      * @param urlObj {object}, a URL object.
      * @return {string|boolean}, a string URL or `false`.
      */
     var auditUrl = function(urlObj) {
-        var _isModified, _pIndex, aParam, hash, pIndex, pathname, sParam, search;
+        var pathname, search, _isModified, pIndex, _pIndex, aParam, sParam, hash;
         var isModified = false;
         /**
          * For sanitizing the pathname property of
@@ -315,6 +304,73 @@
     };
 
     /**
+     * Parse a URL string.
+     *
+     * @param url {string}, a URL string.
+     * @return {object}, a URL object.
+     */
+    var parseUrl = function(url) {
+        var uriParseRe, uriArr;
+        try {
+            url = new URL(url);
+        } catch (e) {
+            uriParseRe = /^(\w+:\/\/)?([^\/:?#]*)(:\d+)?([^?#]*)(\?[^#]+)?(#.+)?/;
+            uriArr = url.match(uriParseRe);
+            url = {
+                get href() {
+                    var frags = uriArr.slice(1, uriArr.length);
+                    return frags.join('');
+                },
+                get protocol() {
+                    return uriArr[1].slice(0, -2);
+                },
+                set protocol(value) {
+                    uriArr[1] = value;
+                },
+                get hostname() {
+                    return uriArr[2];
+                },
+                set hostname(value) {
+                    uriArr[2] = value;
+                },
+                get port() {
+                    return (uriArr[3]) ? uriArr[3].slice(1) : '';
+                },
+                set port(value) {
+                    uriArr[3] = ':' + value;
+                },
+                get host() {
+                    return uriArr[2] + (uriArr[3] || '');
+                },
+                set host(value) {
+                    value = value.split(':');
+                    this.hostname = value[0] || this.hostname;
+                    this.port = value[1] || this.port;
+                },
+                get pathname() {
+                    return uriArr[4] || '/';
+                },
+                set pathname(value) {
+                    uriArr[4] = '/' + value;
+                },
+                get search() {
+                    return uriArr[5] || '';
+                },
+                set search(value) {
+                    uriArr[5] = (value) ? '?' + value : '';
+                },
+                get hash() {
+                    return uriArr[6] || '';
+                },
+                set hash(value) {
+                    uriArr[6] = (value) ? '#' + value : '';
+                }
+            };
+        }
+        return url;
+    };
+
+    /**
      * Register a new cross-browser event listener.
      *
      * @param target {object}, a target object to bind the event listener to.
@@ -332,23 +388,25 @@
             };
         }
         // For IE8 and earlier versions support.
-        return function(target, _, evName, callback) {
+        return function(target, equiv, evName, callback) {
             var _callback;
+            var _attachEvent = (equiv === 'window') ? window.attachEvent :
+                document.attachEvent;
             if (evName === 'DOMContentLoaded') {
                 _callback = function() {
                     if (target.readyState === 'interactive') {
                         callback();
                     }
                 };
-                target.attachEvent('onreadystatechange', _callback);
+                _attachEvent.call(target, 'onreadystatechange', _callback);
             } else {
-                target.attachEvent('on' + evName, callback);
+                _attachEvent.call(target, 'on' + evName, callback);
             }
         };
     })();
 
     /**
-     * A proxy function to `Object.defineProperties`.
+     * A proxy function for `Object.defineProperties`.
      *
      * @param obj {object}, a target object.
      * @param properties {object}, a property descriptor.
@@ -360,7 +418,7 @@
         while (index--) {
             prop = properties[index];
             _value = prop.value;
-            prop = prop._default ? {
+            prop = prop.default ? {
                 value: _value,
                 enumerable: true,
                 writable: true,
@@ -407,7 +465,7 @@
      * @return void.
      */
     var auditWin = function(winObj) {
-        var _onhashchange, _onmessage, auditFrames, name, referrer, title;
+        var name, title, referrer, _onhashchange, _onmessage, auditFrames;
         /**
          * For registering event listeners to audit
          * non-fixed and communicative input sources.
@@ -428,7 +486,7 @@
                     defineProperties(ev, {
                         'data': {
                             value: data,
-                            _default: true
+                            default: true
                         }
                     });
                 }
@@ -475,7 +533,7 @@
                 defineProperties(winObj.document, {
                     'referrer': {
                         value: referrer,
-                        _default: true
+                        default: true
                     }
                 });
             }
@@ -521,244 +579,6 @@
             'DOMContentLoaded', auditFrames);
     };
 
-    /**
-     * A proxy function to `Object.getPrototypeOf`.
-     *
-     * @return {object}, a prototype object.
-     */
-    var getPrototypeOf = function () {
-        try {
-            return Object.getPrototypeOf.apply(this, arguments);
-        } catch (e) {}
-    };
-
-    /**
-     * Guard write functions against tainted strings.
-     *
-     * @param writeFn {function}, a write-like function.
-     * @return {function}.
-     */
-    var guardWrite = function(writeFn) {
-        return function(str) {
-            var els, el;
-            if (!isSafeArg(str)) {
-                str = toSafeStr(str);
-                els = document.getElementsByTagName('*');
-                el = els[els.length - 1];
-                el.parentElement.innerHTML = str;
-            } else {
-                writeFn.call(document, str);
-            }
-        };
-    };
-
-    /**
-     * A proxy function to `Array.prototype.some`.
-     *
-     * @param fn {function}, a test function.
-     * @return {boolean}.
-     */
-    var some = Array.prototype.some || function(fn) {
-        var index = this.length;
-        while (index--) {
-            if (fn(this[index])) {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    /**
-     * Check if a given string is safe.
-     *
-     * @return void.
-     */
-    var isSafeArg = function() {
-        /**
-         * Validate any given string argument.
-         *
-         * @param arg {string}, a given string.
-         * @return {boolean}.
-         */
-        var validate = function(arg) {
-            /**
-             * Check if a given string is tainted.
-             *
-             * @param taint {string}, a given string.
-             * @return {boolean}.
-             */
-            var isTainted = function(taint) {
-                return (isNaN(taint) &&
-                    taint.length > 6 &&
-                    arg.indexOf(taint) !== -1);
-            };
-            arg = toPlain(arg).output;
-            return (some.call(inputs, isTainted));
-        };
-        if (some.call(arguments, validate)) {
-            return false;
-        }
-        return true;
-    };
-
-    /**
-     * Guard a given sink function.
-     *
-     * @param sinkFn {function}, a sink function.
-     * @return {function}, a safe sink function.
-     */
-    var guardSink = function(sinkFn) {
-        return function() {
-            var args;
-            if (isSafeArg.apply(null, arguments)) {
-                if (sinkFn.apply) {
-                    return sinkFn.apply(this, arguments);
-                } else {
-                    args = [].slice.call(arguments);
-                    return sinkFn(args);
-                }
-            }
-        };
-    };
-
-    /**
-     * Check if a given node is unsafe.
-     *
-     * @param node {object}, a given DOM node.
-     * @return {boolean}.
-     */
-    var isUnsafeNode = function(node) {
-        var attrib, attribName, attribs, childObjects, childScripts, index;
-        var nodeName = node.nodeName;
-        if (node.hasChildNodes &&
-                node.hasChildNodes() &&
-                    node.getElementsByTagName) {
-            childScripts = node.getElementsByTagName('script');
-            childObjects = node.getElementsByTagName('object');
-            if (some.call(childScripts, isUnsafeNode) ||
-                some.call(childObjects, isUnsafeNode)) {
-                return true;
-            }
-        }
-        if (nodeName === 'SCRIPT') {
-            if (!isSafeArg(node.text) || !isSafeArg(node.src)) {
-                return true;
-            }
-            return false;
-        } else if (nodeName === 'OBJECT') {
-            if (!isSafeArg(node.data)) {
-                return true;
-            }
-        }
-        if (node.hasAttributes && node.hasAttributes()) {
-            attribs = node.attributes;
-            index = attribs.length;
-            while (index--) {
-                attrib = attribs[index];
-                attribName = attrib.name;
-                if (/^on./.test(attribName) &&
-                    !isSafeArg(attrib.value)) {
-                    node.removeAttribute(attribName);
-                }
-            }
-        }
-    };
-
-    /**
-     * Neutralize a given DOM node.
-     *
-     * @param node {object}, an unsafe DOM node.
-     * @return {object}, a neutralized DOM node.
-     */
-    var toSafeNode = function(node) {
-        node.innerHTML = '';
-        if (node.hasAttribute('src')) {
-            node.removeAttribute('src');
-        }
-        if (node.hasAttribute('data')) {
-            node.removeAttribute('data');
-        }
-        return node;
-    };
-
-    /**
-     * Guard `appendChild` and alike methods.
-     *
-     * @param method {function}, a given function.
-     * @return {function}.
-     */
-    var guardMethod = function(method) {
-        return function(node) {
-            if (isUnsafeNode(node)) {
-                node = toSafeNode(node);
-            }
-            return method.apply(this, arguments);
-        };
-    };
-
-    /**
-     * A proxy function to `Object.getOwnPropertyDescriptor`.
-     *
-     * @return {object}, a property descriptor.
-     */
-    var getOwnPropertyDescriptor = function () {
-        try {
-            return Object.getOwnPropertyDescriptor.apply(this, arguments);
-        } catch (e) {}
-    };
-
-    /**
-     * Guard a given storage object.
-     *
-     * @param storageObj {object}, a storage object.
-     * @return {object}, a safe storage object.
-     */
-    var guardStorage = function(storageObj) {
-        return {
-            setItem: function(key, value) {
-                if (isSafeArg(key, value)) {
-                    storageObj.setItem(key, value);
-                }
-            },
-            getItem: function(key) {
-                return storageObj.getItem(key);
-            }
-        };
-    };
-
-    /**
-     * Take a suspicious string and neutralize it.
-     *
-     * @param str {string}, a suspicious string.
-     * @return {string}, a neutralized string.
-     */
-    var toSafeStr = function(str) {
-        if (str.indexOf('<') !== 0 && bRegex.test(str)) {
-            str = str.replace(bRegex, '');
-        }
-        return str;
-    };
-
-    /**
-     * Generate a safe property descriptor.
-     *
-     * @param prop {object}, a descriptor object.
-     * @return {object}.
-     */
-    var genDescriptor = function(prop) {
-        return {
-            get: function() {
-                return prop.get.call(this);
-            },
-            set: function(val) {
-                if (!isSafeArg(val)) {
-                    val = toSafeStr(val);
-                }
-                return prop.set.call(this, val);
-            }
-        };
-    };
-
     // Audit `self` window.
     auditWin(window);
 
@@ -788,14 +608,203 @@
     _eval = window.eval;
     _setInterval = window.setInterval;
     _setTimeout = window.setTimeout;
+    elPrototype = Element.prototype;
+    _appendChild = elPrototype.appendChild;
+    _replaceChild = elPrototype.replaceChild;
+    _insertBefore = elPrototype.insertBefore;
+    some = Array.prototype.some || function(fn) {
+        var index = this.length;
+        while (index--) {
+            if (fn(this[index])) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    /**
+     * Check if a given string is safe.
+     *
+     * @return void.
+     */
+    isSafeArg = function() {
+        /**
+         * Validate any given string argument.
+         *
+         * @param arg {string}, a given string.
+         * @return {boolean}.
+         */
+        var validate = function(arg) {
+            /**
+             * Check if a given string is tainted.
+             *
+             * @param taint {string}, a given string.
+             * @return {boolean}.
+             */
+            var isTainted = function(taint) {
+                return (isNaN(taint) &&
+                    taint.length > 6 &&
+                    arg.indexOf(taint) !== -1);
+            };
+            arg = toPlain(arg).output;
+            return (some.call(inputs, isTainted));
+        };
+        if (some.call(arguments, validate)) {
+            return false;
+        }
+        return true;
+    };
+
+    /**
+     * Take a suspicious string and neutralize it.
+     *
+     * @param str {string}, a suspicious string.
+     * @return {string}, a neutralized string.
+     */
+    toSafeStr = function(str) {
+        if (str.indexOf('<') !== 0 && bRegex.test(str)) {
+            str = str.replace(bRegex, '');
+        }
+        return str;
+    };
+
+    /**
+     * Guard `appendChild` and alike methods.
+     *
+     * @param method {function}, a given function.
+     * @return {function}.
+     */
+    guardMethod = function(method) {
+        return function(node) {
+            var nodeName = node.nodeName;
+            /**
+             * Check if a given node is unsafe.
+             *
+             * @param node {object}, a given DOM node.
+             * @return {boolean}.
+             */
+            var isUnsafeEl = function(node) {
+                var childScripts, attribs, index, attrib, attribName;
+                if (node.hasChildNodes && node.hasChildNodes()) {
+                    childScripts = node.getElementsByTagName('script');
+                    if (some.call(childScripts, isUnsafeEl)) {
+                        return true;
+                    }
+                }
+                if (nodeName === 'SCRIPT') {
+                    if (!isSafeArg(node.text) || !isSafeArg(node.src)) {
+                        return true;
+                    }
+                    return false;
+                } else if (nodeName === 'OBJECT') {
+                    if (!isSafeArg(node.data)) {
+                        return true;
+                    }
+                }
+                if (node.hasAttributes && node.hasAttributes()) {
+                    attribs = node.attributes;
+                    index = attribs.length;
+                    while (index--) {
+                        attrib = attribs[index];
+                        attribName = attrib.name;
+                        if (/^on./.test(attribName) &&
+                            !isSafeArg(attrib.value)) {
+                            node.removeAttribute(attribName);
+                        }
+                    }
+                }
+            };
+            if (isUnsafeEl(node)) {
+                node.innerHTML = '';
+                if (node.hasAttribute('src')) {
+                    node.removeAttribute('src');
+                }
+            }
+            return method.apply(this, arguments);
+        };
+    };
+
+    /* Guard `appendChild` and alike. */
+    elPrototype.appendChild = guardMethod(_appendChild);
+    elPrototype.replaceChild = guardMethod(_replaceChild);
+    elPrototype.insertBefore = guardMethod(_insertBefore);
+
+    /* Guard `innerHTML` and alike. */
+    Rprototype = Range.prototype;
+    getOwnPropertyDescriptor = function () {
+        try {
+            return Object.getOwnPropertyDescriptor.apply(this, arguments);
+        } catch (e) {}
+    };
+    _innerHTML = getOwnPropertyDescriptor(elPrototype, 'innerHTML');
+    _outerHTML = getOwnPropertyDescriptor(elPrototype, 'outerHTML');
+    _createContextualFragment = Rprototype.createContextualFragment;
+    Rprototype.createContextualFragment = function(tagStr) {
+        if (!isSafeArg(tagStr)) {
+            tagStr = toSafeStr(tagStr);
+        }
+        return _createContextualFragment.call(this, tagStr);
+    };
+    /**
+     * Generate a safe property descriptor.
+     *
+     * @param prop {object}, a descriptor object.
+     * @return {object}.
+     */
+    genDescriptor = function(prop) {
+        return {
+            get: function() {
+                return prop.get.call(this);
+            },
+            set: function(val) {
+                if (!isSafeArg(val)) {
+                    val = toSafeStr(val);
+                }
+                return prop.set.call(this, val);
+            }
+        };
+    };
+    Object.defineProperties(elPrototype, {
+        'innerHTML': genDescriptor(_innerHTML),
+        'outerHTML': genDescriptor(_outerHTML)
+    });
+
+    _insertAdjacentHTML = elPrototype.insertAdjacentHTML;
+    if (_insertAdjacentHTML) {
+        elPrototype.insertAdjacentHTML = function(position, html) {
+            if (!isSafeArg(html)) {
+                html = toSafeStr(html);
+            }
+            return _insertAdjacentHTML.call(this, position, html);
+        };
+    }
+
+    /* Guard `document.write` and alike methods. */
     _write = document.write;
     _writeln = document.writeln;
+    /**
+     * Guard a given function against tainted strings.
+     *
+     * @param writeFn {function}, a write-like function.
+     * @return {function}.
+     */
+    guardWrite = function(writeFn) {
+        return function(str) {
+            var els, el;
+            if (!isSafeArg(str)) {
+                str = toSafeStr(str);
+                els = document.getElementsByTagName('*');
+                el = els[els.length - 1];
+                el.parentElement.innerHTML = str;
+            } else {
+                writeFn.call(document, str);
+            }
+        };
+    };
     document.write = guardWrite(_write);
     document.writeln = guardWrite(_writeln);
-    window.eval = guardSink(_eval);
-    window.setTimeout = guardSink(_setTimeout);
-    window.setInterval = guardSink(_setInterval);
-    window.Function = function() {
+
+    Function = function() {
         /**
          * Construct a new `Function` instance.
          *
@@ -816,60 +825,25 @@
         }
         return construct();
     };
-    window.Function.prototype = Function;
-    if (window.Element) {
-        elPrototype = window.Element.prototype;
-        _appendChild = elPrototype.appendChild;
-        _replaceChild = elPrototype.replaceChild;
-        _insertBefore = elPrototype.insertBefore;
-        _insertAdjacentHTML = elPrototype.insertAdjacentHTML;
-        _insertAdjacentElement = elPrototype.insertAdjacentElement;
-        _innerHTML = getOwnPropertyDescriptor(elPrototype, 'innerHTML');
-        _outerHTML = getOwnPropertyDescriptor(elPrototype, 'outerHTML');
-        elPrototype.appendChild = guardMethod(_appendChild);
-        elPrototype.replaceChild = guardMethod(_replaceChild);
-        elPrototype.insertBefore = guardMethod(_insertBefore);
-        elPrototype.insertAdjacentHTML = function(position, html) {
-            if (!isSafeArg(html)) {
-                html = toSafeStr(html);
-            }
-            return _insertAdjacentHTML.call(this, position, html);
-        };
-        elPrototype.insertAdjacentElement = function(position, el) {
-            if (isUnsafeNode(el)) {
-                el = toSafeNode(el);
-            }
-            return _insertAdjacentElement.call(this, position, el);
-        };
-        defineProperties(elPrototype, {
-            'innerHTML': genDescriptor(_innerHTML),
-            'outerHTML': genDescriptor(_outerHTML)
-        });
-    }
-    if (window.execScript) {
-        _execScript = window.execScript;
-        // A nasty workaround to override execScript.
-        eval('var execScript;');
-        window.execScript = guardSink(_execScript);
-    }
-    if (window.setImmediate) {
-        _setImmediate = window.setImmediate;
-        window.setImmediate = guardSink(_setImmediate);
-    }
+    Function.prototype = Function;
 
-    /* Guard `createContextualFragment`. */
-    if (window.Range) {
-        Rprototype = window.Range.prototype;
-        _createContextualFragment = Rprototype.createContextualFragment;
-        Rprototype.createContextualFragment = function(tagStr) {
-            if (!isSafeArg(tagStr)) {
-                tagStr = '';
+    /**
+     * Guard a given sink function.
+     *
+     * @param sinkFn {function}, a sink function.
+     * @return {function}, a safe sink function.
+     */
+    guardSink = function(sinkFn) {
+        return function() {
+            if (isSafeArg.apply(null, arguments)) {
+                return sinkFn.apply(this, arguments);
             }
-            return _createContextualFragment.call(this, tagStr);
         };
-    }
-
-    if (window.atob) {
+    };
+    window.eval = guardSink(_eval);
+    window.setTimeout = guardSink(_setTimeout);
+    window.setInterval = guardSink(_setInterval);
+    if (typeof window.atob === 'function') {
         _atob = window.atob;
         window.atob = function(str) {
             if (isSafeArg(str)) {
@@ -879,8 +853,21 @@
             return str;
         };
     }
+    if (typeof window.execScript === 'function') {
+        _execScript = window.execScript;
+        window.execScript = guardSink(_execScript);
+    }
+    if (typeof window.setImmediate === 'function') {
+        _setImmediate = window.setImmediate;
+        window.setImmediate = guardSink(_setImmediate);
+    }
 
     /* Monkey-patch storage sources. */
+    getPrototypeOf = function () {
+        try {
+            return Object.getPrototypeOf.apply(this, arguments);
+        } catch (e) {}
+    };
     _cookieDesc = (function () {
         try {
             return getOwnPropertyDescriptor(document, 'cookie') ||
@@ -888,7 +875,7 @@
                 {
                     get: document.__lookupGetter__('cookie'),
                     set: document.__lookupSetter__('cookie')
-                };
+                }
         } catch (e) {}
     })();
     _cookie = document.cookie;
@@ -912,16 +899,32 @@
             }
         }
     });
-    try {
-        if (window.localStorage) {
-            _localStorage = window.localStorage;
-            delete window.localStorage;
-            window.localStorage = guardStorage(_localStorage);
-        }
-        if (window.sessionStorage) {
-            _sessionStorage = window.sessionStorage;
-            delete window.sessionStorage;
-            window.sessionStorage = guardStorage(_sessionStorage);
-        }
-    } catch (e) {}
+    /**
+     * Guard a given storage object.
+     *
+     * @param storageObj {object}, a storage object.
+     * @return {object}, a safe storage object.
+     */
+    guardStorage = function(storageObj) {
+        return {
+            setItem: function(key, value) {
+                if (isSafeArg(key, value)) {
+                    storageObj.setItem(key, value);
+                }
+            },
+            getItem: function(key) {
+                return storageObj.getItem(key);
+            }
+        };
+    };
+    if (window.localStorage) {
+        _localStorage = window.localStorage;
+        delete window.localStorage;
+        window.localStorage = guardStorage(_localStorage);
+    }
+    if (window.sessionStorage) {
+        _sessionStorage = window.sessionStorage;
+        delete window.sessionStorage;
+        window.sessionStorage = guardStorage(_sessionStorage);
+    }
 })(window, Object, Array);
