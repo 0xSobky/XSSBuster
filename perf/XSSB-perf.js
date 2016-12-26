@@ -1,7 +1,7 @@
 var start = performance.now(); // for benchmarking
 
 (function(window, Object, Array) {
-    // Version 1.0.3.
+    // Version 1.0.4.
     var Rprototype, _Function, _appendChild, _atob, _cookie, _cookieDesc,
         _createContextualFragment, _eval, _execScript, _innerHTML,
         _insertAdjacentElement, _insertAdjacentHTML, _insertBefore,
@@ -421,9 +421,11 @@ var start = performance.now(); // for benchmarking
             }
         };
         _onmessage = function(ev) {
-            var data, index, port;
+            var _origin, data, index, port;
             var ports = ev.ports;
-            var _origin = ev.origin || ev.originalEvent.origin;
+            try {
+                _origin = ev.origin || ev.originalEvent.origin;
+            } catch (e) {}
             if (_origin !== origin) {
                 data = sanitize(ev.data);
                 if (data !== false) {
@@ -613,10 +615,10 @@ var start = performance.now(); // for benchmarking
         return function() {
             var args;
             if (isSafeArg.apply(null, arguments)) {
-                if (sinkFn.apply) {
+                try {
                     return sinkFn.apply(this, arguments);
-                } else {
-                    args = [].slice.call(arguments);
+                } catch (e) {
+                    args = Array.prototype.slice.call(arguments);
                     return sinkFn(args);
                 }
             }
@@ -819,7 +821,7 @@ var start = performance.now(); // for benchmarking
         return construct();
     };
     window.Function.prototype = Function;
-    if (window.Element) {
+    try {
         elPrototype = window.Element.prototype;
         _appendChild = elPrototype.appendChild;
         _replaceChild = elPrototype.replaceChild;
@@ -847,7 +849,7 @@ var start = performance.now(); // for benchmarking
             'innerHTML': genDescriptor(_innerHTML),
             'outerHTML': genDescriptor(_outerHTML)
         });
-    }
+    } catch (e) {}
     if (window.execScript) {
         _execScript = window.execScript;
         // A nasty workaround to override execScript.
@@ -859,18 +861,7 @@ var start = performance.now(); // for benchmarking
         window.setImmediate = guardSink(_setImmediate);
     }
 
-    /* Guard `createContextualFragment`. */
-    if (window.Range) {
-        Rprototype = window.Range.prototype;
-        _createContextualFragment = Rprototype.createContextualFragment;
-        Rprototype.createContextualFragment = function(tagStr) {
-            if (!isSafeArg(tagStr)) {
-                tagStr = '';
-            }
-            return _createContextualFragment.call(this, tagStr);
-        };
-    }
-
+    // Override `atob` to sanitize tainted base64-encoded strings.
     if (window.atob) {
         _atob = window.atob;
         window.atob = function(str) {
@@ -881,6 +872,18 @@ var start = performance.now(); // for benchmarking
             return str;
         };
     }
+
+    /* Guard `createContextualFragment`. */
+    try {
+        Rprototype = window.Range.prototype;
+        _createContextualFragment = Rprototype.createContextualFragment;
+        Rprototype.createContextualFragment = function(tagStr) {
+            if (!isSafeArg(tagStr)) {
+                tagStr = '';
+            }
+            return _createContextualFragment.call(this, tagStr);
+        };
+    } catch (e) {}
 
     /* Monkey-patch storage sources. */
     _cookieDesc = (function () {
