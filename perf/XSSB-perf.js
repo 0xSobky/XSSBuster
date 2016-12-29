@@ -68,10 +68,7 @@ var start = performance.now(); // for benchmarking
          */
         var deEncode = function(input) {
             var _input, es, eusExtend, ues;
-            /**
-             * A try/catch clause to handle any
-             * URIError exceptions that might occur.
-             */
+            /* A try/catch clause to handle any URIError exceptions. */
             try {
                 // Recursively URL-decode the input data.
                 while (duc(input) !== input) {
@@ -86,7 +83,7 @@ var start = performance.now(); // for benchmarking
                     ++depth;
                 }
             } catch (e) {
-                // Make sure `escape` and `unescape` are still supported.
+                // Make sure `escape()` and `unescape()` are still supported.
                 if (typeof window.escape === 'function' &&
                     typeof window.unescape === 'function') {
                     es = window.escape;
@@ -96,7 +93,7 @@ var start = performance.now(); // for benchmarking
                     /**
                      * Extend a given URI encoding/decoding function's functionality.
                      *
-                     * @param func {function}, a `decodeURIComponent`/`encodeURIComponent` function.
+                     * @param func {function}, a `decodeURIComponent()`/`encodeURIComponent()` function.
                      * @return {function}.
                      */
                     eusExtend = function(func) {
@@ -127,7 +124,7 @@ var start = performance.now(); // for benchmarking
     };
 
     /**
-     * Take a `toPlain` output and re-encode it.
+     * Take a `toPlain()` output and re-encode it.
      *
      * @param input {string}, the output data property of toPlain's output object.
      * @param depth {integer}, the depth data property of toPlain's output object.
@@ -350,7 +347,7 @@ var start = performance.now(); // for benchmarking
     })();
 
     /**
-     * A proxy function to `Object.defineProperties`.
+     * A proxy function to `Object.defineProperties()`.
      *
      * @param obj {object}, a target object.
      * @param properties {object}, a property descriptor.
@@ -526,7 +523,7 @@ var start = performance.now(); // for benchmarking
     };
 
     /**
-     * A proxy function to `Object.getPrototypeOf`.
+     * A proxy function to `Object.getPrototypeOf()`.
      *
      * @return {object}, a prototype object.
      */
@@ -557,7 +554,7 @@ var start = performance.now(); // for benchmarking
     };
 
     /**
-     * A proxy function to `Array.prototype.some`.
+     * A proxy function to `Array.prototype.some()`.
      *
      * @param fn {function}, a test function.
      * @return {boolean}.
@@ -688,7 +685,7 @@ var start = performance.now(); // for benchmarking
     };
 
     /**
-     * Guard `appendChild` and alike methods.
+     * Guard `appendChild()` and alike methods.
      *
      * @param method {function}, a given function.
      * @return {function}.
@@ -703,7 +700,7 @@ var start = performance.now(); // for benchmarking
     };
 
     /**
-     * A proxy function to `Object.getOwnPropertyDescriptor`.
+     * A proxy function to `Object.getOwnPropertyDescriptor()`.
      *
      * @return {object}, a property descriptor.
      */
@@ -803,7 +800,7 @@ var start = performance.now(); // for benchmarking
     window.setInterval = guardSink(_setInterval);
     window.Function = function() {
         /**
-         * Construct a new `Function` instance.
+         * Construct a new `Function()` instance.
          *
          * @return {function}.
          */
@@ -863,7 +860,7 @@ var start = performance.now(); // for benchmarking
         window.setImmediate = guardSink(_setImmediate);
     }
 
-    // Override `atob` to sanitize tainted base64-encoded strings.
+    // Override `atob()` to sanitize tainted base64-encoded strings.
     if (window.atob) {
         _atob = window.atob;
         window.atob = function(str) {
@@ -875,7 +872,7 @@ var start = performance.now(); // for benchmarking
         };
     }
 
-    /* Guard `createContextualFragment`. */
+    /* Guard `createContextualFragment()`. */
     try {
         Rprototype = window.Range.prototype;
         _createContextualFragment = Rprototype.createContextualFragment;

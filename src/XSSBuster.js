@@ -66,10 +66,7 @@
          */
         var deEncode = function(input) {
             var _input, es, eusExtend, ues;
-            /**
-             * A try/catch clause to handle any
-             * URIError exceptions that might occur.
-             */
+            /* A try/catch clause to handle any URIError exceptions. */
             try {
                 // Recursively URL-decode the input data.
                 while (duc(input) !== input) {
@@ -84,7 +81,7 @@
                     ++depth;
                 }
             } catch (e) {
-                // Make sure `escape` and `unescape` are still supported.
+                // Make sure `escape()` and `unescape()` are still supported.
                 if (typeof window.escape === 'function' &&
                     typeof window.unescape === 'function') {
                     es = window.escape;
@@ -94,7 +91,7 @@
                     /**
                      * Extend a given URI encoding/decoding function's functionality.
                      *
-                     * @param func {function}, a `decodeURIComponent`/`encodeURIComponent` function.
+                     * @param func {function}, a `decodeURIComponent()`/`encodeURIComponent()` function.
                      * @return {function}.
                      */
                     eusExtend = function(func) {
@@ -125,7 +122,7 @@
     };
 
     /**
-     * Take a `toPlain` output and re-encode it.
+     * Take a `toPlain()` output and re-encode it.
      *
      * @param input {string}, the output data property of toPlain's output object.
      * @param depth {integer}, the depth data property of toPlain's output object.
@@ -348,7 +345,7 @@
     })();
 
     /**
-     * A proxy function to `Object.defineProperties`.
+     * A proxy function to `Object.defineProperties()`.
      *
      * @param obj {object}, a target object.
      * @param properties {object}, a property descriptor.
@@ -524,7 +521,7 @@
     };
 
     /**
-     * A proxy function to `Object.getPrototypeOf`.
+     * A proxy function to `Object.getPrototypeOf()`.
      *
      * @return {object}, a prototype object.
      */
@@ -555,7 +552,7 @@
     };
 
     /**
-     * A proxy function to `Array.prototype.some`.
+     * A proxy function to `Array.prototype.some()`.
      *
      * @param fn {function}, a test function.
      * @return {boolean}.
@@ -686,7 +683,7 @@
     };
 
     /**
-     * Guard `appendChild` and alike methods.
+     * Guard `appendChild()` and alike methods.
      *
      * @param method {function}, a given function.
      * @return {function}.
@@ -701,7 +698,7 @@
     };
 
     /**
-     * A proxy function to `Object.getOwnPropertyDescriptor`.
+     * A proxy function to `Object.getOwnPropertyDescriptor()`.
      *
      * @return {object}, a property descriptor.
      */
@@ -801,7 +798,7 @@
     window.setInterval = guardSink(_setInterval);
     window.Function = function() {
         /**
-         * Construct a new `Function` instance.
+         * Construct a new `Function()` instance.
          *
          * @return {function}.
          */
@@ -861,7 +858,7 @@
         window.setImmediate = guardSink(_setImmediate);
     }
 
-    // Override `atob` to sanitize tainted base64-encoded strings.
+    // Override `atob()` to sanitize tainted base64-encoded strings.
     if (window.atob) {
         _atob = window.atob;
         window.atob = function(str) {
@@ -873,7 +870,7 @@
         };
     }
 
-    /* Guard `createContextualFragment`. */
+    /* Guard `createContextualFragment()`. */
     try {
         Rprototype = window.Range.prototype;
         _createContextualFragment = Rprototype.createContextualFragment;
