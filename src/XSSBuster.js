@@ -632,16 +632,16 @@
     var isUnsafeNode = function(node) {
         var attrib, attribName, attribs, childObjects, childScripts, index;
         var nodeName = node.nodeName;
-        if (node.hasChildNodes &&
-                node.hasChildNodes() &&
-                    node.getElementsByTagName) {
-            childScripts = node.getElementsByTagName('script');
-            childObjects = node.getElementsByTagName('object');
-            if (some.call(childScripts, isUnsafeNode) ||
-                some.call(childObjects, isUnsafeNode)) {
-                return true;
+        try {
+            if (node.hasChildNodes()) {
+                childScripts = node.getElementsByTagName('script');
+                childObjects = node.getElementsByTagName('object');
+                if (some.call(childScripts, isUnsafeNode) ||
+                    some.call(childObjects, isUnsafeNode)) {
+                    return true;
+                }
             }
-        }
+        } catch (e) {}
         if (nodeName === 'SCRIPT') {
             if (!isSafeArg(node.text) || !isSafeArg(node.src)) {
                 return true;
@@ -652,18 +652,20 @@
                 return true;
             }
         }
-        if (node.hasAttributes && node.hasAttributes()) {
-            attribs = node.attributes;
-            index = attribs.length;
-            while (index--) {
-                attrib = attribs[index];
-                attribName = attrib.name;
-                if (/^on./.test(attribName) &&
-                    !isSafeArg(attrib.value)) {
-                    node.removeAttribute(attribName);
+        try {
+            if (node.hasAttributes()) {
+                attribs = node.attributes;
+                index = attribs.length;
+                while (index--) {
+                    attrib = attribs[index];
+                    attribName = attrib.name;
+                    if (/^on./.test(attribName) &&
+                        !isSafeArg(attrib.value)) {
+                        node.removeAttribute(attribName);
+                    }
                 }
             }
-        }
+        } catch (e) {}
     };
 
     /**
