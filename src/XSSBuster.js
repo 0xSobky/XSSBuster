@@ -869,7 +869,7 @@
     } catch (e) {}
     if (window.execScript) {
         _execScript = window.execScript;
-        // A nasty workaround to override execScript.
+        // A nasty workaround to override `execScript()`.
         eval('var execScript;');
         window.execScript = guardSink(_execScript);
     }
