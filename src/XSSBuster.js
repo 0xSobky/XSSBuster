@@ -627,14 +627,19 @@
      * @return {boolean}.
      */
     var isUnsafeNode = function(node) {
-        var attrib, attribName, attribs, childObjects, childScripts, index;
+        var attrib, attribName, attribs, childFrames, childIframes,
+            childObjects, childScripts, index;
         var nodeName = node.nodeName;
         try {
             if (node.hasChildNodes()) {
                 childScripts = node.getElementsByTagName('script');
                 childObjects = node.getElementsByTagName('object');
+                childFrames = node.getElementsByTagName('frame');
+                childIframes = node.getElementsByTagName('iframe');
                 if (some.call(childScripts, isUnsafeNode) ||
-                    some.call(childObjects, isUnsafeNode)) {
+                    some.call(childObjects, isUnsafeNode) ||
+                    some.call(childFrames, isUnsafeNode) ||
+                    some.call(childIframes, isUnsafeNode)) {
                     return true;
                 }
             }
@@ -648,6 +653,12 @@
             if (!isSafeArg(node.data)) {
                 return true;
             }
+            return false;
+        } else if (nodeName === 'IFRAME' || nodeName === 'FRAME') {
+            if (/^data:/.test(node.src) || (node.srcdoc && !isSafeArg(node.srcdoc))) {
+                return true;
+            }
+            return false;
         }
         try {
             if (node.hasAttributes()) {
@@ -675,6 +686,9 @@
         node.innerHTML = '';
         if (node.hasAttribute('src')) {
             node.removeAttribute('src');
+        }
+        if (node.hasAttribute('srcdoc')) {
+            node.removeAttribute('srcdoc');
         }
         if (node.hasAttribute('data')) {
             node.removeAttribute('data');
@@ -736,6 +750,7 @@
     var toSafeStr = function(str) {
         if (str.indexOf('<') !== 0 && bRegex.test(str)) {
             str = str.replace(bRegex, '');
+            str = str.replace(/\bsrcdoc=/gi, 'redacted=');
         }
         return str;
     };
