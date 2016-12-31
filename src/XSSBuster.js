@@ -401,18 +401,25 @@
      * @return void.
      */
     var auditWin = function(winObj) {
-        var _onhashchange, _onmessage, auditFrames, name, referrer, title;
+        var auditFrames, name, referrer, title;
         /**
-         * For registering event listeners to audit
-         * non-fixed and communicative input sources.
+         * Audit the `location.hash` window property on change.
+         *
+         * @return void.
          */
-        _onhashchange = function() {
+        var _onhashchange = function() {
             var hash = sanitize(winObj.location.hash.slice(1));
             if (hash !== false) {
                 winObj.location.hash = hash;
             }
         };
-        _onmessage = function(ev) {
+        /**
+         * Intercept HTML5 messages and audit them.
+         *
+         * @param ev {object}, a message event.
+         * @return void.
+         */
+        var _onmessage = function(ev) {
             var _origin, data, index, port;
             var ports = ev.ports;
             try {
