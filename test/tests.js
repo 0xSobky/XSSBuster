@@ -74,6 +74,18 @@
         assert.notEqual(document.cookie, rawSanPayload, 'cookie sanitized');
     });
 
+    QUnit.test('localStorage test', function(assert) {
+        window.localStorage.setItem('test', rawSanPayload);
+        assert.notEqual(localStorage.getItem('test'), rawSanPayload,
+                            'localStorage sanitized');
+    });
+
+    QUnit.test('sessionStorage test', function(assert) {
+        window.sessionStorage.setItem('test', rawSanPayload);
+        assert.notEqual(sessionStorage.getItem('test'), rawSanPayload,
+                            'sessionStorage sanitized');
+    });
+
     QUnit.test('appendChild test', function(assert) {
         var scriptEl = createScriptEl();
         document.body.appendChild(scriptEl);
@@ -98,16 +110,15 @@
         assert.ok(evilVar === 0, 'insertBefore sanitized');
     });
 
-    QUnit.test('localStorage test', function(assert) {
-        window.localStorage.setItem('test', rawSanPayload);
-        assert.notEqual(localStorage.getItem('test'), rawSanPayload,
-                            'localStorage sanitized');
-    });
-
-    QUnit.test('sessionStorage test', function(assert) {
-        window.sessionStorage.setItem('test', rawSanPayload);
-        assert.notEqual(sessionStorage.getItem('test'), rawSanPayload,
-                            'sessionStorage sanitized');
+    QUnit.test('iframe src/srcdoc test', function(assert) {
+        var iframeEl = document.createElement('iframe');
+        var scriptText = '<script>' + hash + '</script>';
+        iframeEl.src = 'data:text/html,' + scriptText;
+        iframeEl.srcdoc = scriptText;
+        iframeEl.style.display = 'none';
+        document.body.appendChild(iframeEl);
+        assert.ok(!iframeEl.hasAttribute('src'), 'iframe src sanitized');
+        assert.ok(!iframeEl.hasAttribute('srcdoc'), 'iframe srcdoc sanitized');
     });
 
     QUnit.test('createContextualFragment test', function(assert) {
