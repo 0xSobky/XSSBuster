@@ -1,7 +1,13 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <script src="XSSB-perf.js"></script>
+    	<script>
+    	    var start = performance.now();
+    	</script>
+        <script src="../src/XSSBuster.js"></script>
+        <script>
+            console.log(performance.now() - start);
+        </script>
     </head>
     <body>
     </body>
