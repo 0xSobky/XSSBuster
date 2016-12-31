@@ -161,10 +161,7 @@
                     isModified = true;
                 }
                 if (bRegex.test(input)) {
-                    do {
-                        input = input.replace(bRegex, '');
-                        bRegex.lastIndex = 0;
-                    } while (bRegex.test(input));
+                    input = input.replace(bRegex, '');
                     isModified = true;
                 }
                 // Add `input` to the list of tainted strings.
