@@ -748,7 +748,7 @@
      * @return {string}, a neutralized string.
      */
     var toSafeStr = function(str) {
-        if (str.indexOf('<') !== 0 && bRegex.test(str)) {
+        if (str.indexOf('<') !== -1 && bRegex.test(str)) {
             str = str.replace(bRegex, '');
             str = str.replace(/\bsrcdoc=/gi, 'redacted=');
         }
