@@ -14,7 +14,7 @@
      * Matches evil URI schemes (e.g., `javascript/vbscript:` and `data:`) alongside HTML entities
      * in general...not to mention event handlers and scary curly notations!
      */
-    var bRegex = /\{\{|\}\}|&#?\w{2,7};?|on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):/gi;
+    var bRegex = /\{\{|\}\}|&#?\w{2,7};?|\b(?:on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):)/gi;
 
     /**
      * Take an input and return its data type.
