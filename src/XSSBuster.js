@@ -624,8 +624,7 @@
      * @return {boolean}.
      */
     var isUnsafeNode = function(node) {
-        var attrib, attribName, attribs, childFrames, childIframes,
-            childObjects, childScripts, index;
+        var childFrames, childIframes, childObjects, childScripts;
         var nodeName = node.nodeName;
         try {
             if (node.hasChildNodes()) {
@@ -666,6 +665,7 @@
      * @return {object}, a neutralized DOM node.
      */
     var toSafeNode = function(node) {
+    var attrib, attribName, attribs, index;
         node.innerHTML = '';
         if (node.hasAttribute('src')) {
             node.removeAttribute('src');
