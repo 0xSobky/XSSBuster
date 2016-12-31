@@ -1,5 +1,5 @@
 (function(window, Object, Array) {
-    // Version 1.0.8.
+    // Version 1.0.9.
     var Rprototype, _Function, _appendChild, _atob, _cookie, _cookieDesc,
         _createContextualFragment, _eval, _execScript, _innerHTML,
         _insertAdjacentElement, _insertAdjacentHTML, _insertBefore,
