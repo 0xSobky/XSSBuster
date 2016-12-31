@@ -658,7 +658,8 @@
             }
             return true;
         } else if (nodeName === 'IFRAME' || nodeName === 'FRAME') {
-            if (/^data:/.test(node.src) || (node.srcdoc && !isSafeArg(node.srcdoc))) {
+            if (/^data:/.test(node.src) ||
+                (node.srcdoc && !isSafeArg(node.srcdoc))) {
                 return true;
             }
             return false;
@@ -672,7 +673,7 @@
      * @return {object}, a neutralized DOM node.
      */
     var toSafeNode = function(node) {
-    var attrib, attribName, attribs, index;
+        var attrib, attribName, attribs, index;
         node.innerHTML = '';
         if (node.hasAttribute('src')) {
             node.removeAttribute('src');
