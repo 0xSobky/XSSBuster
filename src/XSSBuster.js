@@ -1,5 +1,5 @@
 (function(window, Object, Array) {
-    // Version 1.0.9.
+    // Version 1.1.0.
     var NativeFunction, Rprototype, cookie, cookieDesc, cookieIndex,
         cookiePair, cookiePairs, elPrototype, innerHTML, nativeAppendChild,
         nativeAtob, nativeCreateContextualFragment, nativeEval,
