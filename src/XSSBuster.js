@@ -638,10 +638,18 @@
      * @return {boolean}.
      */
     var isUnsafeNode = function(node) {
-        var childFrames, childIframes, childObjects, childScripts;
+        var childApplets, childEmbeds, childFrames, childIframes, childObjects, childScripts;
         var nodeName = node.nodeName;
         try {
             if (node.hasChildNodes()) {
+                childApplets = node.getElementsByTagName('applet');
+                if (childApplets.length > 0) {
+                    return some.call(childApplets, isUnsafeNode);
+                }
+                childEmbeds = node.getElementsByTagName('embed');
+                if (childEmbeds.length > 0) {
+                    return some.call(childEmbeds, isUnsafeNode);
+                }
                 childFrames = node.getElementsByTagName('frame');
                 if (childFrames.length > 0) {
                     return some.call(childFrames, isUnsafeNode);
@@ -670,9 +678,17 @@
                 return false;
             }
             return true;
-        } else if (nodeName === 'IFRAME' || nodeName === 'FRAME') {
+        } else if (nodeName === 'IFRAME' || nodeName === 'FRAME' ||
+                   nodeName === 'EMBED') {
             if (isSafeArg(node.src) &&
                 (!node.srcdoc || isSafeArg(node.srcdoc))) {
+                return false;
+            }
+            return true;
+        } else if (nodeName === 'APPLET') {
+            if (isSafeArg(node.code) &&
+                (!node.codebase || isSafeArg(node.codebase)) &&
+                (!node.archive || isSafeArg(node.archive))) {
                 return false;
             }
             return true;
@@ -696,6 +712,18 @@
         }
         if (node.hasAttribute('data')) {
             node.removeAttribute('data');
+        }
+        if (node.hasAttribute('code')) {
+            node.removeAttribute('code');
+        }
+        if (node.hasAttribute('archive')) {
+            node.removeAttribute('archive');
+        }
+        if (node.hasAttribute('codebase')) {
+            node.removeAttribute('codebase');
+        }
+        if (node.hasAttribute('object')) {
+            node.removeAttribute('object');
         }
         try {
             if (node.hasAttributes()) {
