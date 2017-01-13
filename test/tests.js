@@ -114,6 +114,14 @@
         assert.ok(evilVar === 0, 'insertBefore sanitized');
     });
 
+    QUnit.test('embed element test', function(assert) {
+        var embedEl = document.createElement('embed');
+        embedEl.src = hash;
+        embedEl.style.display = 'none';
+        document.body.appendChild(embedEl);
+        assert.ok(!embedEl.hasAttribute('src'), 'embed src sanitized');
+    });
+
     QUnit.test('iframe element test', function(assert) {
         var iframeEl = document.createElement('iframe');
         iframeEl.src = hash;
@@ -122,6 +130,22 @@
         document.body.appendChild(iframeEl);
         assert.ok(!iframeEl.hasAttribute('src'), 'iframe src sanitized');
         assert.ok(!iframeEl.hasAttribute('srcdoc'), 'iframe srcdoc sanitized');
+    });
+
+    QUnit.test('applet element test', function(assert) {
+        var appletEl = document.createElement('applet');
+        appletEl.code = hash;
+        appletEl.codebase = hash;
+        appletEl.archive = hash;
+        appletEl.object = hash;
+        appletEl.style.display = 'none';
+        document.body.appendChild(appletEl);
+        assert.ok(!appletEl.hasAttribute('code'), 'applet code sanitized');
+        assert.ok(!appletEl.hasAttribute('codebase'),
+                  'applet codebase sanitized');
+        assert.ok(!appletEl.hasAttribute('archive'),
+                  'applet archive sanitized');
+        assert.ok(!appletEl.hasAttribute('object'), 'applet object sanitized');
     });
 
     QUnit.test('createContextualFragment test', function(assert) {
