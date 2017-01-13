@@ -1,12 +1,13 @@
 (function(window, Object, Array) {
     // Version 1.0.9.
-    var NativeFunction, Rprototype, cookie, cookieDesc, elPrototype, innerHTML,
-        nativeAppendChild, nativeAtob, nativeCreateContextualFragment,
-        nativeEval, nativeExecScript, nativeInsertAdjacentElement,
-        nativeInsertAdjacentHTML, nativeInsertBefore, nativeLocalStorage,
-        nativeReplaceChild, nativeSessionStorage, nativeSetImmediate,
-        nativeSetInterval, nativeSetTimeout, nativeWrite, nativeWriteln,
-        outerHTML, win, winOrigin;
+    var NativeFunction, Rprototype, cookie, cookieDesc, cookieIndex,
+        cookiePair, cookiePairs, elPrototype, innerHTML, nativeAppendChild,
+        nativeAtob, nativeCreateContextualFragment, nativeEval,
+        nativeExecScript, nativeInsertAdjacentElement, nativeInsertAdjacentHTML,
+        nativeInsertBefore, nativeLocalStorage, nativeReplaceChild,
+        nativeSessionStorage, nativeSetImmediate, nativeSetInterval,
+        nativeSetTimeout, nativeWrite, nativeWriteln, outerHTML, valIndex, win,
+        winOrigin;
 
     var taintedStrings = [];
 
@@ -974,6 +975,16 @@
             }
         }
     });
+    // Add cookie values to tainted strings
+    cookiePairs = cookie.split(';');
+    cookieIndex = cookiePairs.length;
+    while (cookieIndex--) {
+        cookiePair = cookiePairs[cookieIndex].split('=');
+        valIndex = cookiePair.length;
+        while (valIndex--) {
+            taintedStrings.push(cookiePair[valIndex]);
+        }
+    }
     try {
         if (window.localStorage) {
             nativeLocalStorage = window.localStorage;
