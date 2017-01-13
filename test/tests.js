@@ -1,7 +1,11 @@
 (function() {
-    var rawSanPayload = 'evilVar=1//svg/alert(1)';
-    var sanPayload = encodeURIComponent('evilVar=1//svg/alert(1)');
+    'use strict';
     var hash = location.hash.slice(1);
+
+    var rawSanPayload = 'evilVar=1//svg/alert(1)';
+
+    var sanPayload = encodeURIComponent('evilVar=1//svg/alert(1)');
+
     var testDiv = document.getElementById('test');
 
     /*
@@ -61,7 +65,7 @@
 
     QUnit.test('location.search test', function(assert) {
         assert.equal(location.search.slice(5),
-                         sanPayload, 'location.search sanitized');
+                     sanPayload, 'location.search sanitized');
     });
 
     QUnit.test('Function constructor test', function(assert) {
@@ -77,13 +81,13 @@
     QUnit.test('localStorage test', function(assert) {
         window.localStorage.setItem('test', rawSanPayload);
         assert.notEqual(localStorage.getItem('test'), rawSanPayload,
-                            'localStorage sanitized');
+                        'localStorage sanitized');
     });
 
     QUnit.test('sessionStorage test', function(assert) {
         window.sessionStorage.setItem('test', rawSanPayload);
         assert.notEqual(sessionStorage.getItem('test'), rawSanPayload,
-                            'sessionStorage sanitized');
+                        'sessionStorage sanitized');
     });
 
     QUnit.test('appendChild test', function(assert) {
@@ -110,11 +114,10 @@
         assert.ok(evilVar === 0, 'insertBefore sanitized');
     });
 
-    QUnit.test('iframe src/srcdoc test', function(assert) {
+    QUnit.test('iframe element test', function(assert) {
         var iframeEl = document.createElement('iframe');
-        var scriptText = '<script>' + hash + '</script>';
-        iframeEl.src = 'data:text/html,' + scriptText;
-        iframeEl.srcdoc = scriptText;
+        iframeEl.src = hash;
+        iframeEl.srcdoc = hash;
         iframeEl.style.display = 'none';
         document.body.appendChild(iframeEl);
         assert.ok(!iframeEl.hasAttribute('src'), 'iframe src sanitized');
@@ -145,7 +148,8 @@
             if (_origin !== window.location.origin) {
                 assert.equal(ev.data, sanPayload, 'message sanitized');
             } else {
-                assert.notEqual(ev.data, sanPayload, 'message not sanitized (same origin)');
+                assert.notEqual(ev.data, sanPayload, 
+                                'message not sanitized (same origin)');
             }
         });
     });
@@ -158,28 +162,28 @@
                 var frameTest = function () {
                     QUnit.test('iframe window.name test', function(assert) {
                             assert.equal(currentFrame.name,
-                                             sanPayload, 'iframe window.name sanitized');
+                                         sanPayload, 'iframe window.name sanitized');
                     });
                     QUnit.test('iframe location.hash test', function(assert) {
                             assert.equal(currentFrame.location.hash.slice(1),
-                                             sanPayload, 'iframe location.hash sanitized');
+                                         sanPayload, 'iframe location.hash sanitized');
                     });
                     QUnit.test('iframe document.title test', function(assert) {
                             assert.equal(currentFrame.document.title,
-                                             sanPayload, 'iframe document.title sanitized');
+                                         sanPayload, 'iframe document.title sanitized');
                     });
                     QUnit.test('iframe location.search test', function(assert) {
                             assert.equal(currentFrame.location.search.slice(5),
-                                             sanPayload, 'iframe location.search sanitized');
+                                         sanPayload, 'iframe location.search sanitized');
                     });
                     nativeSetTimeout(function() {
                         QUnit.test('deferred frame window.name test', function(assert) {
                                 assert.equal(currentFrame.name,
-                                                 sanPayload, 'iframe window.name sanitized (deferred)');
+                                             sanPayload, 'iframe window.name sanitized (deferred)');
                         });
                         QUnit.test('deferred frame location.hash test', function(assert) {
                                 assert.equal(currentFrame.location.hash.slice(1),
-                                                 sanPayload, 'iframe location.hash sanitized (deferred)');
+                                             sanPayload, 'iframe location.hash sanitized (deferred)');
                         });
                     }, 2000);
                 };
