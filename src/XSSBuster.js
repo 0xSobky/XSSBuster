@@ -1,20 +1,23 @@
 (function(window, Object, Array) {
     // Version 1.0.9.
-    var Rprototype, _Function, _appendChild, _atob, _cookie, _cookieDesc,
-        _createContextualFragment, _eval, _execScript, _innerHTML,
-        _insertAdjacentElement, _insertAdjacentHTML, _insertBefore,
-        _localStorage, _origin, _outerHTML, _replaceChild, _sessionStorage,
-        _setImmediate, _setInterval, _setTimeout, _write, _writeln,
-        elPrototype, win;
+    var NativeFunction, Rprototype, cookie, cookieDesc, elPrototype, innerHTML,
+        nativeAppendChild, nativeAtob, nativeCreateContextualFragment,
+        nativeEval, nativeExecScript, nativeInsertAdjacentElement,
+        nativeInsertAdjacentHTML, nativeInsertBefore, nativeLocalStorage,
+        nativeReplaceChild, nativeSessionStorage, nativeSetImmediate,
+        nativeSetInterval, nativeSetTimeout, nativeWrite, nativeWriteln,
+        outerHTML, win, winOrigin;
 
-    var inputs = [];
+    var taintedStrings = [];
+
     var origin = window.location.origin ||
         window.location.protocol + '//' + window.location.host;
+
     /**
-     * Matches evil URI schemes (e.g., `javascript/vbscript:` and `data:`) alongside HTML entities
-     * in general...not to mention event handlers and scary curly notations!
+     * Matches evil URI schemes, event handlers, HTML entities,
+     * and scary curly notations!
      */
-    var bRegex = /\{\{|\}\}|&#?\w{2,7};?|\b(?:on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):)/gi;
+    var blacklistRe = /\{\{|\}\}|&#?\w{2,7};?|\b(?:on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):)/gi;
 
     /**
      * Take an input and return its data type.
@@ -52,10 +55,10 @@
      * @return {object}, a container for decoded data.
      */
     var toPlain = function(input) {
-        var eu = window.encodeURI;
-        var du = window.decodeURI;
-        var euc = window.encodeURIComponent;
-        var duc = window.decodeURIComponent;
+        var encURI = window.encodeURI;
+        var decURI = window.decodeURI;
+        var encURIComp = window.encodeURIComponent;
+        var decURIComp = window.decodeURIComponent;
         var depth = 0;
         var revMethod = [];
         /**
@@ -65,18 +68,18 @@
          * @return {string}, a URL-decoded string.
          */
         var deEncode = function(input) {
-            var _input, es, eusExtend, ues;
+            var es, eusExtend, origInput, ues;
             /* A try/catch clause to handle any URIError exceptions. */
             try {
                 // Recursively URL-decode the input data.
-                while (duc(input) !== input) {
-                    _input = duc(input);
-                    if (du(input) === _input) {
-                        input = du(input);
-                        revMethod.push(eu);
+                while (decURIComp(input) !== input) {
+                    origInput = decURIComp(input);
+                    if (decURI(input) === origInput) {
+                        input = decURI(input);
+                        revMethod.push(encURI);
                     } else {
-                        input = _input;
-                        revMethod.push(euc);
+                        input = origInput;
+                        revMethod.push(encURIComp);
                     }
                     ++depth;
                 }
@@ -89,20 +92,20 @@
                 // A just-in-case fallback.
                 } else {
                     /**
-                     * Extend a given URI encoding/decoding function's functionality.
+                     * Extend a URL-encoding/decoding function's functionality.
                      *
-                     * @param func {function}, a `decodeURIComponent()`/`encodeURIComponent()` function.
+                     * @param func {function}, a URL-encoding/decoding function.
                      * @return {function}.
                      */
                     eusExtend = function(func) {
-                        var charset = /(?:[\x00-\x24]|[\x26-\x7f]|[^\x00-\x7f]|%(?:40|2[b-f]|2[0-9]|3[a-e]|[57][b-d]))+/gi;
+                        var charsetRe = /(?:[\x00-\x24]|[\x26-\x7f]|[^\x00-\x7f]|%(?:40|2[b-f]|2[0-9]|3[a-e]|[57][b-d]))+/gi;
                         return function(string) {
-                            string = string.match(charset);
+                            string = string.match(charsetRe);
                             return (string) ? func(string.join('')) : null;
                         };
                     };
-                    es = eusExtend(euc);
-                    ues = eusExtend(duc);
+                    es = eusExtend(encURIComp);
+                    ues = eusExtend(decURIComp);
                 }
                 input = ues(input);
                 revMethod.push(es);
@@ -124,9 +127,9 @@
     /**
      * Take a `toPlain()` output and re-encode it.
      *
-     * @param input {string}, the output data property of toPlain's output object.
-     * @param depth {integer}, the depth data property of toPlain's output object.
-     * @param revMethod {function}, the revMethod data property of toPlain's output object.
+     * @param input {string}, a `toPlain().output` property.
+     * @param depth {integer}, a `toPlain().depth` property.
+     * @param revMethod {function}, a `toPlain().revMethod` property.
      * @return {string}, URL-encoded data.
      */
     var reEncode = function(input, depth, revMethod) {
@@ -143,9 +146,9 @@
      * @return {string|array|object|boolean}, sanitized data or `false`.
      */
     var sanitize = function(input) {
-        var _input, hasOwnProperty, index, item, keys, prop, propSanitize;
-        // Matches only Basic Latin characters along with a few safe special chars.
-        var wRegex = /[^\w\s\/^+=$#@!&*|,;:.?%()[\]{}-]/g;
+        var origInput, hasOwnProperty, index, item, keys, prop, propSanitize;
+        // Matches safe Basic Latin characters.
+        var whitelistRe = /[^\w\s\/\^+=$#@!&*|,;:.?%()\[\]{}\-]/g;
         var isModified = false;
         // Check if `input` is a string.
         if (getType(input) === 'string') {
@@ -153,22 +156,22 @@
             if (/\S/.test(input)) {
                 // Check if `input` is URL-encoded.
                 if (/%\w{2}/.test(input)) {
-                    _input = toPlain(input);
-                    input = _input.output;
+                    origInput = toPlain(input);
+                    input = origInput.output;
                 }
-                if (wRegex.test(input)) {
-                    input = input.replace(wRegex, '');
+                if (whitelistRe.test(input)) {
+                    input = input.replace(whitelistRe, '');
                     isModified = true;
                 }
-                if (bRegex.test(input)) {
-                    input = input.replace(bRegex, '');
+                if (blacklistRe.test(input)) {
+                    input = input.replace(blacklistRe, '');
                     isModified = true;
                 }
                 // Add `input` to the list of tainted strings.
-                inputs.push(input);
+                taintedStrings.push(input);
                 // Re-encode `input` if it has been decoded.
-                if (_input) {
-                    input = reEncode(input, _input.depth, _input.revMethod);
+                if (origInput) {
+                    input = reEncode(input, origInput.depth, origInput.revMethod);
                 }
             }
         // Check if it's an object.
@@ -239,7 +242,8 @@
      * @return {string|boolean}, a string URL or `false`.
      */
     var auditUrl = function(urlObj) {
-        var _isModified, _pIndex, aParam, hash, pIndex, pathname, sParam, search;
+        var hash, paramPair, paramIndex, paramModified, pathname, sanParam,
+            search, subIndex;
         var isModified = false;
         /**
          * For sanitizing the pathname property of
@@ -256,39 +260,39 @@
          */
         search = urlObj.search;
         if (search) {
-            _isModified = false;
+            paramModified = false;
             search = search.slice(1).split('&');
-            pIndex = search.length;
-            while (pIndex--) {
-                aParam = search[pIndex].split('=');
-                if (aParam.length < 3) {
-                    sParam = sanitize(aParam[0]);
-                    if (sParam !== false) {
-                        aParam[0] = sParam;
-                        _isModified = true;
+            paramIndex = search.length;
+            while (paramIndex--) {
+                paramPair = search[paramIndex].split('=');
+                if (paramPair.length < 3) {
+                    sanParam = sanitize(paramPair[0]);
+                    if (sanParam !== false) {
+                        paramPair[0] = sanParam;
+                        paramModified = true;
                     }
-                    if (aParam[1]) {
-                        sParam = sanitize(aParam[1]);
-                        if (sParam !== false) {
-                            aParam[1] = sParam;
-                            _isModified = true;
+                    if (paramPair[1]) {
+                        sanParam = sanitize(paramPair[1]);
+                        if (sanParam !== false) {
+                            paramPair[1] = sanParam;
+                            paramModified = true;
                         }
                     }
                 } else {
-                    _pIndex = aParam.length;
-                    while (_pIndex--) {
-                        sParam = sanitize(aParam[_pIndex]);
-                        if (sParam !== false) {
-                            _isModified = true;
-                            aParam[_pIndex] = sParam;
+                    subIndex = paramPair.length;
+                    while (subIndex--) {
+                        sanParam = sanitize(paramPair[subIndex]);
+                        if (sanParam !== false) {
+                            paramModified = true;
+                            paramPair[subIndex] = sanParam;
                         }
                     }
                 }
-                if (_isModified) {
-                    search[pIndex] = aParam.join('=');
+                if (paramModified) {
+                    search[paramIndex] = paramPair.join('=');
                 }
             }
-            if (_isModified) {
+            if (paramModified) {
                 urlObj.search = search.join('&');
                 isModified = true;
             }
@@ -320,21 +324,25 @@
     var addListener = (function() {
         if (window.addEventListener) {
             return function(target, equiv, evName, callback) {
-                var _addEventListener = (equiv === 'window') ?
+                var nativeAddEventListener = (equiv === 'window') ?
                     window.addEventListener : document.addEventListener;
-                _addEventListener.call(target, evName, callback);
+                nativeAddEventListener.call(target, evName, callback);
             };
         }
         // For IE8 and earlier versions support.
         return function(target, _, evName, callback) {
-            var _callback;
+            var domLoadedCallback;
             if (evName === 'DOMContentLoaded') {
-                _callback = function() {
+                /**
+                 * A proxy function to `callback()`.
+                 * @return void.
+                 */
+                domLoadedCallback = function() {
                     if (target.readyState === 'interactive') {
                         callback();
                     }
                 };
-                target.attachEvent('onreadystatechange', _callback);
+                target.attachEvent('onreadystatechange', domLoadedCallback);
             } else {
                 target.attachEvent('on' + evName, callback);
             }
@@ -349,13 +357,13 @@
      * @return void.
      */
     var defineProperties = function(obj, properties) {
-        var prop, _value;
+        var origValue, prop;
         var index = properties.length;
         while (index--) {
             prop = properties[index];
-            _value = prop.value;
-            prop = prop._default ? {
-                value: _value,
+            origValue = prop.value;
+            prop = prop.isDefault ? {
+                value: origValue,
                 enumerable: true,
                 writable: true,
                 configurable: true
@@ -374,24 +382,24 @@
      * @return void.
      */
     var auditWinName = function(winObj) {
-        var _name = winObj.name;
+        var origName = winObj.name;
         defineProperties(winObj, {
             'name': {
                 get: function() {
-                    return _name;
+                    return origName;
                 },
                 set: function(val) {
-                    var sVal = sanitize(val);
-                    if (sVal !== false) {
-                        _name = sVal;
+                    var sanVal = sanitize(val);
+                    if (sanVal !== false) {
+                        origName = sanVal;
                     } else {
-                        _name = val;
+                        origName = val;
                     }
                 },
                 enumerable: true
             }
         });
-        winObj.name = _name;
+        winObj.name = origName;
     };
 
     /**
@@ -407,7 +415,7 @@
          *
          * @return void.
          */
-        var _onhashchange = function() {
+        var onhashchangeFn = function() {
             var hash = sanitize(winObj.location.hash.slice(1));
             if (hash !== false) {
                 winObj.location.hash = hash;
@@ -419,19 +427,19 @@
          * @param ev {object}, a message event.
          * @return void.
          */
-        var _onmessage = function(ev) {
-            var _origin, data, index, port;
+        var onmessageFn = function(ev) {
+            var winOrigin, data, index, port;
             var ports = ev.ports;
             try {
-                _origin = ev.origin || ev.originalEvent.origin;
+                winOrigin = ev.origin || ev.originalEvent.origin;
             } catch (e) {}
-            if (_origin !== origin) {
+            if (winOrigin !== origin) {
                 data = sanitize(ev.data);
                 if (data !== false) {
                     defineProperties(ev, {
                         'data': {
                             value: data,
-                            _default: true
+                            isDefault: true
                         }
                     });
                 }
@@ -439,15 +447,15 @@
                     index = ports.length;
                     while (index--) {
                         port = ports[index];
-                        port.onmessage = _onmessage;
+                        port.onmessage = onmessageFn;
                     }
                 }
             }
         };
         // For hash re-sanitization whenever it gets modified.
-        addListener(winObj, 'window', 'hashchange', _onhashchange);
+        addListener(winObj, 'window', 'hashchange', onhashchangeFn);
         // For cross-document messaging sanitization.
-        addListener(winObj, 'window', 'message', _onmessage);
+        addListener(winObj, 'window', 'message', onmessageFn);
         // Audit the current window URL.
         auditUrl(winObj.location);
         /**
@@ -478,7 +486,7 @@
                 defineProperties(winObj.document, {
                     'referrer': {
                         value: referrer,
-                        _default: true
+                        isDefault: true
                     }
                 });
             }
@@ -538,19 +546,19 @@
     /**
      * Guard write functions against tainted strings.
      *
-     * @param writeFn {function}, a write-like function.
+     * @param nativeWrite {function}, a write-like function.
      * @return {function}.
      */
-    var guardWrite = function(writeFn) {
+    var guardWrite = function(nativeWrite) {
         return function(str) {
-            var els, el;
+            var el, els;
             if (!isSafeArg(str)) {
                 str = toSafeStr(str);
                 els = document.getElementsByTagName('*');
                 el = els[els.length - 1];
                 el.parentElement.innerHTML = str;
             } else {
-                writeFn.call(document, str);
+                nativeWrite.call(document, str);
             }
         };
     };
@@ -591,12 +599,11 @@
              * @return {boolean}.
              */
             var isTainted = function(taint) {
-                return (isNaN(taint) &&
-                    taint.length > 6 &&
-                    arg.indexOf(taint) !== -1);
+                return (isNaN(taint) && taint.length > 6 &&
+                        arg.indexOf(taint) !== -1);
             };
             arg = toPlain(arg).output;
-            return (some.call(inputs, isTainted));
+            return (some.call(taintedStrings, isTainted));
         };
         if (some.call(arguments, validate)) {
             return false;
@@ -635,15 +642,21 @@
         var nodeName = node.nodeName;
         try {
             if (node.hasChildNodes()) {
-                childScripts = node.getElementsByTagName('script');
-                childObjects = node.getElementsByTagName('object');
                 childFrames = node.getElementsByTagName('frame');
+                if (childFrames.length > 0) {
+                    return some.call(childFrames, isUnsafeNode);
+                }
                 childIframes = node.getElementsByTagName('iframe');
-                if (some.call(childScripts, isUnsafeNode) ||
-                    some.call(childObjects, isUnsafeNode) ||
-                    some.call(childFrames, isUnsafeNode) ||
-                    some.call(childIframes, isUnsafeNode)) {
-                    return true;
+                if (childIframes.length > 0) {
+                    return some.call(childIframes, isUnsafeNode);
+                }
+                childObjects = node.getElementsByTagName('object');
+                if (childObjects.length > 0) {
+                    return some.call(childObjects, isUnsafeNode);
+                }
+                childScripts = node.getElementsByTagName('script');
+                if (childScripts.length > 0) {
+                    return some.call(childScripts, isUnsafeNode);
                 }
             }
         } catch (e) {}
@@ -658,11 +671,11 @@
             }
             return true;
         } else if (nodeName === 'IFRAME' || nodeName === 'FRAME') {
-            if (/^data:/.test(node.src) ||
-                (node.srcdoc && !isSafeArg(node.srcdoc))) {
-                return true;
+            if (isSafeArg(node.src) &&
+                (!node.srcdoc || isSafeArg(node.srcdoc))) {
+                return false;
             }
-            return false;
+            return true;
         }
     };
 
@@ -691,8 +704,7 @@
                 while (index--) {
                     attrib = attribs[index];
                     attribName = attrib.name;
-                    if (/^on./.test(attribName) &&
-                        !isSafeArg(attrib.value)) {
+                    if (/^on./.test(attribName) && !isSafeArg(attrib.value)) {
                         node.removeAttribute(attribName);
                     }
                 }
@@ -753,8 +765,8 @@
      * @return {string}, a neutralized string.
      */
     var toSafeStr = function(str) {
-        if (str.indexOf('<') !== -1 && bRegex.test(str)) {
-            str = str.replace(bRegex, '');
+        if (str.indexOf('<') !== -1 && blacklistRe.test(str)) {
+            str = str.replace(blacklistRe, '');
             str = str.replace(/\bsrcdoc=/gi, 'redacted=');
         }
         return str;
@@ -787,12 +799,12 @@
     if (window !== top) {
         win = parent;
         try {
-            _origin = win.location.origin ||
+            winOrigin = win.location.origin ||
                 win.location.protocol + '//' + win.location.host;
         } catch(e) {}
         do {
             try {
-                if (_origin !== origin) {
+                if (winOrigin !== origin) {
                     auditWinName(win);
                     auditWin(win);
                 }
@@ -805,17 +817,17 @@
     }
 
     /* Monkey-patch JS sinks. */
-    _Function = window.Function;
-    _eval = window.eval;
-    _setInterval = window.setInterval;
-    _setTimeout = window.setTimeout;
-    _write = document.write;
-    _writeln = document.writeln;
-    document.write = guardWrite(_write);
-    document.writeln = guardWrite(_writeln);
-    window.eval = guardSink(_eval);
-    window.setTimeout = guardSink(_setTimeout);
-    window.setInterval = guardSink(_setInterval);
+    NativeFunction = window.Function;
+    nativeEval = window.eval;
+    nativeSetInterval = window.setInterval;
+    nativeSetTimeout = window.setTimeout;
+    nativeWrite = document.write;
+    nativeWriteln = document.writeln;
+    document.write = guardWrite(nativeWrite);
+    document.writeln = guardWrite(nativeWriteln);
+    window.eval = guardSink(nativeEval);
+    window.setTimeout = guardSink(nativeSetTimeout);
+    window.setInterval = guardSink(nativeSetInterval);
     window.Function = function() {
         /**
          * Construct a new `Function()` instance.
@@ -823,7 +835,7 @@
          * @return {function}.
          */
         var construct = function() {
-            var fn = _Function.apply(null, arguments);
+            var fn = NativeFunction.apply(null, arguments);
             fn.constructor = Function;
             try {
                 Object.setPrototypeOf(fn, Function);
@@ -840,52 +852,52 @@
     window.Function.prototype = Function;
     try {
         elPrototype = window.Element.prototype;
-        _appendChild = elPrototype.appendChild;
-        _replaceChild = elPrototype.replaceChild;
-        _insertBefore = elPrototype.insertBefore;
-        _insertAdjacentHTML = elPrototype.insertAdjacentHTML;
-        _insertAdjacentElement = elPrototype.insertAdjacentElement;
-        _innerHTML = getOwnPropertyDescriptor(elPrototype, 'innerHTML');
-        _outerHTML = getOwnPropertyDescriptor(elPrototype, 'outerHTML');
-        elPrototype.appendChild = guardMethod(_appendChild);
-        elPrototype.replaceChild = guardMethod(_replaceChild);
-        elPrototype.insertBefore = guardMethod(_insertBefore);
+        nativeAppendChild = elPrototype.appendChild;
+        nativeReplaceChild = elPrototype.replaceChild;
+        nativeInsertBefore = elPrototype.insertBefore;
+        nativeInsertAdjacentHTML = elPrototype.insertAdjacentHTML;
+        nativeInsertAdjacentElement = elPrototype.insertAdjacentElement;
+        innerHTML = getOwnPropertyDescriptor(elPrototype, 'innerHTML');
+        outerHTML = getOwnPropertyDescriptor(elPrototype, 'outerHTML');
+        elPrototype.appendChild = guardMethod(nativeAppendChild);
+        elPrototype.replaceChild = guardMethod(nativeReplaceChild);
+        elPrototype.insertBefore = guardMethod(nativeInsertBefore);
         elPrototype.insertAdjacentHTML = function(position, html) {
             if (!isSafeArg(html)) {
                 html = toSafeStr(html);
             }
-            return _insertAdjacentHTML.call(this, position, html);
+            return nativeInsertAdjacentHTML.call(this, position, html);
         };
         elPrototype.insertAdjacentElement = function(position, el) {
             if (isUnsafeNode(el)) {
                 el = toSafeNode(el);
             }
-            return _insertAdjacentElement.call(this, position, el);
+            return nativeInsertAdjacentElement.call(this, position, el);
         };
         defineProperties(elPrototype, {
-            'innerHTML': genDescriptor(_innerHTML),
-            'outerHTML': genDescriptor(_outerHTML)
+            'innerHTML': genDescriptor(innerHTML),
+            'outerHTML': genDescriptor(outerHTML)
         });
     } catch (e) {}
     if (window.execScript) {
-        _execScript = window.execScript;
+        nativeExecScript = window.execScript;
         // A nasty workaround to override `execScript()`.
         eval('var execScript;');
-        window.execScript = guardSink(_execScript);
+        window.execScript = guardSink(nativeExecScript);
     }
     if (window.setImmediate) {
-        _setImmediate = window.setImmediate;
-        window.setImmediate = guardSink(_setImmediate);
+        nativeSetImmediate = window.setImmediate;
+        window.setImmediate = guardSink(nativeSetImmediate);
     }
 
     // Override `atob()` to sanitize tainted base64-encoded strings.
     if (window.atob) {
-        _atob = window.atob;
+        nativeAtob = window.atob;
         window.atob = function(str) {
             if (isSafeArg(str)) {
-                return _atob(str);
+                return nativeAtob(str);
             }
-            str = sanitize(_atob(str));
+            str = sanitize(nativeAtob(str));
             return str;
         };
     }
@@ -893,17 +905,18 @@
     /* Guard `createContextualFragment()`. */
     try {
         Rprototype = window.Range.prototype;
-        _createContextualFragment = Rprototype.createContextualFragment;
+        nativeCreateContextualFragment = Rprototype.createContextualFragment;
         Rprototype.createContextualFragment = function(tagStr) {
             if (!isSafeArg(tagStr)) {
                 tagStr = '';
             }
-            return _createContextualFragment.call(this, tagStr);
+            return nativeCreateContextualFragment.call(this, tagStr);
         };
     } catch (e) {}
 
     /* Monkey-patch storage sources. */
-    _cookieDesc = (function () {
+    cookie = document.cookie;
+    cookieDesc = (function () {
         try {
             return getOwnPropertyDescriptor(document, 'cookie') ||
                 getOwnPropertyDescriptor(getPrototypeOf(document), 'cookie') ||
@@ -913,22 +926,21 @@
                 };
         } catch (e) {}
     })();
-    _cookie = document.cookie;
     defineProperties(document, {
         'cookie': {
             get: function() {
                 try {
-                    return _cookieDesc.get.call(this);
+                    return cookieDesc.get.call(this);
                 } catch (e) {
-                    return _cookie;
+                    return cookie;
                 }
             },
             set: function(val) {
                 if (isSafeArg(val)) {
                     try {
-                        return _cookieDesc.set.call(this, val);
+                        return cookieDesc.set.call(this, val);
                     } catch (e) {
-                        _cookie += ';' + val;
+                        cookie += ';' + val;
                     }
                 }
             }
@@ -936,14 +948,14 @@
     });
     try {
         if (window.localStorage) {
-            _localStorage = window.localStorage;
+            nativeLocalStorage = window.localStorage;
             delete window.localStorage;
-            window.localStorage = guardStorage(_localStorage);
+            window.localStorage = guardStorage(nativeLocalStorage);
         }
         if (window.sessionStorage) {
-            _sessionStorage = window.sessionStorage;
+            nativeSessionStorage = window.sessionStorage;
             delete window.sessionStorage;
-            window.sessionStorage = guardStorage(_sessionStorage);
+            window.sessionStorage = guardStorage(nativeSessionStorage);
         }
     } catch (e) {}
 })(window, Object, Array);
