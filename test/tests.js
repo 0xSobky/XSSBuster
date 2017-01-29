@@ -8,8 +8,8 @@
 
     var testDiv = document.getElementById('test');
 
-    /*
-     * Registers a new cross-browser event listener.
+    /**
+     * Register a new cross-browser event listener.
      *
      * @param evName {string}, the name of the event to register.
      * @param callback {function}, a callback function for the event listener.
@@ -23,7 +23,7 @@
             };
     })();
 
-    /*
+    /**
      * Create a script element.
      *
      * @return {object}, a script node.
@@ -34,8 +34,8 @@
         return scriptEl;
     };
 
-    /*
-     * Tests any given sink function.
+    /**
+     * Test any given sink function.
      *
      * @param fn {function}, a sink function.
      * @param name {string}, a sink function's name.

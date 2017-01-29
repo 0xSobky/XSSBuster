@@ -14,7 +14,7 @@
     var origin = window.location.origin ||
         window.location.protocol + '//' + window.location.host;
 
-    /**
+    /*
      * Matches evil URI schemes, event handlers, HTML entities,
      * and scary curly notations!
      */
@@ -246,7 +246,7 @@
         var hash, paramPair, paramIndex, paramModified, pathname, sanParam,
             search, subIndex;
         var isModified = false;
-        /**
+        /*
          * For sanitizing the pathname property of
          * the current window location object.
          */
@@ -255,7 +255,7 @@
             urlObj.pathname = pathname;
             isModified = true;
         }
-        /**
+        /*
          * For sanitizing the search property of
          * the current window location object.
          */
@@ -298,7 +298,7 @@
                 isModified = true;
             }
         }
-        /**
+        /*
          * For sanitizing the hash property of
          * the current window location object.
          */
@@ -459,7 +459,7 @@
         addListener(winObj, 'window', 'message', onmessageFn);
         // Audit the current window URL.
         auditUrl(winObj.location);
-        /**
+        /*
          * For sanitizing the name property
          * of the current window object.
          */
@@ -470,7 +470,7 @@
                 winObj.name = name;
             }
         }
-        /**
+        /*
          * For sanitizing the title of the current document.
          * And yep, `document.title` can be -partially?-
          * manipulated by attackers as in search pages!
