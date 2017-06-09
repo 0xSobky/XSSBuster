@@ -214,6 +214,9 @@
                     isModified = true;
                 }
             }
+        } else {
+            input = null;
+            isModified = true;
         }
         return (isModified) ? input : false;
     };
