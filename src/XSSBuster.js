@@ -35,16 +35,25 @@
         // An object?
         } else if (toString.call(input) === '[object Object]') {
             return 'object';
-        }
-        try {
-            // Perhaps an array?
-            if (Array.isArray(input)) {
-                return 'array';
-            }
-        } catch (e) {
-            if (toString.call(input) === '[object Array]') {
-                return 'array';
-            }
+        // An array?
+        } else if (Array.isArray && Array.isArray(input) ||
+            toString.call(input) === '[object Array]') {
+            return 'array';
+        // A map?
+        } else if (toString.call(input) === '[object Map]') {
+            return 'map';
+        // A set?
+        } else if (toString.call(input) === '[object Set]') {
+            return 'set';
+        // A regex?
+        } else if (toString.call(input) === '[object RegExp]') {
+            return 'regexp';
+        // A file
+        } else if (toString.call(input) === '[object File]') {
+            return 'file';
+        // A fileList?
+        } else if (toString.call(input) === '[object FileList]') {
+            return 'fileList';
         }
         return 'other';
     };
@@ -147,12 +156,14 @@
      * @return {string|array|object|boolean}, sanitized data or `false`.
      */
     var sanitize = function(input) {
-        var origInput, hasOwnProperty, index, item, keys, prop, propSanitize;
+        var formData, hasOwnProperty, index, item, keys, origInput, prop, propSanitize,
+            tmpVar;
         // Matches safe Basic Latin characters.
         var whitelistRe = /[^\w\s\/\^+=$#@!&*|,;:.?%()\[\]{}\-]/g;
         var isModified = false;
+        var inptType = getType(input);
         // Check if `input` is a string.
-        if (getType(input) === 'string') {
+        if (inptType === 'string') {
             // Assert it's not a whitespace string.
             if (/\S/.test(input)) {
                 // Check if `input` is URL-encoded.
@@ -176,7 +187,7 @@
                 }
             }
         // Check if it's an object.
-        } else if (getType(input) === 'object') {
+        } else if (inptType === 'object') {
             /**
              * Take an object property and audit it.
              *
@@ -203,20 +214,85 @@
                     }
                 }
             }
-        // Check if it's an array.
-        } else if (getType(input) === 'array') {
-            index = input.length;
+        // Check if it's a set.
+        } else if (inptType === 'set') {
+            try {
+                tmpVar = new Set();
+                input.forEach(function(val) {
+                    var sVal = sanitize(val);
+                    val = sVal ? sVal : val;
+                    tmpVar.add(val);
+                });
+                input = tmpVar;
+            } catch (e) {
+                input = null;
+            }
+            isModified = true;
+        // Check if it's a map.
+        } else if (inptType === 'map') {
+            try {
+                tmpVar = new Map();
+                input.forEach(function(val, key) {
+                    var sVal = sanitize(val);
+                    var sKey = sanitize(key);
+                    val = sVal ? sVal : val;
+                    key = sKey ? sKey : key;
+                    tmpVar.set(key, val);
+                });
+                input = tmpVar;
+            } catch (e) {
+                input = null;
+            }
+            isModified = true;
+        // Check if it's a regexp.
+        } else if (inptType === 'regexp') {
+            tmpVar = sanitize(input.source);
+            if (tmpVar !== false) {
+                input = new RegExp(tmpVar);
+                isModified = true;
+            }
+        // Check if it's a file.
+        } else if (inptType === 'file') {
+            try {
+                tmpVar = sanitize(input.name);
+                if (tmpVar !== false) {
+                    formData = new FormData();
+                    formData.append('file', input, tmpVar);
+                    input = formData.get('file');
+                    if (sanitize(input.name) !== false) {
+                        input = null;
+                    }
+                    isModified = true;
+                }
+            } catch (e) {
+                input = null;
+            }
+        // Check if it's an array-like object.
+        } else if (inptType === 'array' || inptType === 'fileList') {
+            if (inptType === 'fileList') {
+                tmpVar = [];
+                index = input.length;
+                while (index--) {
+                    tmpVar[index] = input[index];
+                }
+                tmpVar.item = function(index) {
+                    return this[index];
+                };
+            } else {
+                tmpVar = input;
+            }
+            index = tmpVar.length;
             // Iterate over array items and sanitize them one by one.
             while (index--) {
-                item = sanitize(input[index]);
+                item = sanitize(tmpVar[index]);
                 if (item !== false) {
-                    input[index] = item;
+                    tmpVar[index] = item;
                     isModified = true;
                 }
             }
-        } else {
-            input = null;
-            isModified = true;
+            if (isModified) {
+                input = tmpVar;
+            }
         }
         return (isModified) ? input : false;
     };
