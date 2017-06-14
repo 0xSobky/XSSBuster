@@ -167,7 +167,7 @@
             // Assert it's not a whitespace string.
             if (/\S/.test(input)) {
                 // Check if `input` is URL-encoded.
-                if (/%\w\w/.test(input)) {
+                if (/%/.test(input)) {
                     origInput = toPlain(input);
                     input = origInput.output;
                 }
