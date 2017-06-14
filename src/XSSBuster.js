@@ -47,8 +47,8 @@
             return 'set';
         // A regex?
         } else if (toString.call(input) === '[object RegExp]') {
-            return 'regexp';
-        // A file
+            return 'regex';
+        // A file?
         } else if (toString.call(input) === '[object File]') {
             return 'file';
         // A fileList?
@@ -108,7 +108,7 @@
                      * @return {function}.
                      */
                     eusExtend = function(func) {
-                        var charsetRe = /(?:[\x00-\x24]|[\x26-\x7f]|[^\x00-\x7f]|%(?:40|2[b-f]|2[0-9]|3[a-e]|[57][b-d]))+/gi;
+                        var charsetRe = /(?:[^%]|%(?:40|2[b-f]|2[0-9]|3[a-e]|[57][b-d]))+/gi;
                         return function(string) {
                             string = string.match(charsetRe);
                             return (string) ? func(string.join('')) : null;
@@ -159,7 +159,7 @@
         var formData, hasOwnProperty, index, item, keys, origInput, prop, propSanitize,
             tmpVar;
         // Matches safe Basic Latin characters.
-        var whitelistRe = /[^\w\s\/\^+=$#@!&*|,;:.?%()\[\]{}\-]/g;
+        var whitelistRe = /[^\w\s\/+=$#@!&*|,;:.?%()[\]{}^-]/g;
         var isModified = false;
         var inptType = getType(input);
         // Check if `input` is a string.
@@ -167,7 +167,7 @@
             // Assert it's not a whitespace string.
             if (/\S/.test(input)) {
                 // Check if `input` is URL-encoded.
-                if (/%\w{2}/.test(input)) {
+                if (/%\w\w/.test(input)) {
                     origInput = toPlain(input);
                     input = origInput.output;
                 }
@@ -244,8 +244,8 @@
                 input = null;
             }
             isModified = true;
-        // Check if it's a regexp.
-        } else if (inptType === 'regexp') {
+        // Check if it's a regex.
+        } else if (inptType === 'regex') {
             tmpVar = sanitize(input.source);
             if (tmpVar !== false) {
                 input = new RegExp(tmpVar);
@@ -699,14 +699,8 @@
      */
     var guardSink = function(sinkFn) {
         return function() {
-            var args;
             if (isSafeArg.apply(null, arguments)) {
-                try {
-                    return sinkFn.apply(this, arguments);
-                } catch (e) {
-                    args = Array.prototype.slice.call(arguments);
-                    return sinkFn(args);
-                }
+                return sinkFn.apply(this, arguments);
             }
         };
     };
