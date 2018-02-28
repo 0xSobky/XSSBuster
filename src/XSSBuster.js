@@ -18,7 +18,7 @@
      * Matches evil URI schemes, event handlers, HTML entities,
      * and scary curly notations!
      */
-    var blacklistRe = /{{|}}|&#?\w{2,7};?|\b(?:on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a\W*?)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t\W*?):)/gi;
+    var blacklistRe = /{{|}}|&#?\w{2,7};?|\b(?:on[a-z]+\W*?=|(?:(?:d\W*a\W*t\W*a)|(?:v\W*b|j\W*a\W*v\W*a)\W*s\W*c\W*r\W*i\W*p\W*t)\W*?:)/gi;
 
     /**
      * Take an input and return its data type.
