@@ -14,7 +14,7 @@ Examples of this are:
 # The Solution:
 **XSSB** mainly utilizes [taint checking](https://en.wikipedia.org/wiki/Taint_checking) to guard against accidental mistakes and poor security practices commonly employed by JS libraries that may lead to DOM-based XSS vulnerabilities.
 
-A rough idea of how it works is: Data from untrusted input sources such as `window.name`, `location.hash`, `document.referrer`, `window.onmessage`, et al. are tainted and are constantly tracked for any changes. **XSSB** then overrides security-sensitive functions and DOM APIs (e.g., `eval()`, `document.write()`, `Element.prototype.appendChild()`, etc.) to enforce taint checking and prevent insecure operations such as `eval(location.hash.slice(1))`, `document.write(window.name)` and the like.
+A rough idea of how it works is: Data from untrusted input sources such as `window.name`, `location.hash`, `document.referrer`, `window.onmessage`, et al. are tainted and are constantly tracked for any changes. **XSSB** then overrides security-sensitive functions and DOM APIs (e.g., `eval()`, `document.write()`, `Element.prototype.appendChild()`, etc.) to enforce taint checking and prevent insecure operations such as `eval(location.hash.slice(1))`, `document.write(window.name)`, and the like.
 
 So, basically, **XSSB** offers you the freedom to deploy any given third-party code into your DOM while at the same time covering your DOM's back!
 
